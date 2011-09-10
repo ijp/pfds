@@ -4,6 +4,10 @@
         tail
         head
         empty?
+        take
+        drop
+        rev
+        append*
         )
 (import (except (rnrs) cons*)
         (rnrs r5rs)
@@ -24,6 +28,31 @@
 (define empty? null?)
 
 (define (tail pair)
-  (force (cdr pair)))
+  (if (empty? pair)
+      pair
+      (force (cdr pair))))
+
+(define (take n l)
+  (if (zero? n)
+      '()
+      (cons* (head l)
+             (take (- n 1) (tail l)))))
+
+(define (drop n l)
+  (if (zero? n)
+      l
+      (drop (- n 1) (tail l))))
+
+(define (append* x y)
+  (if (empty? x)
+      y
+      (cons* (head x)
+             (append* (tail x) y))))
+
+(define (rev l)
+  (let loop ((l l) (a '()))
+    (if (empty? l)
+        a
+        (loop (tail l) (cons* (head l) a)))))
 
 )
