@@ -1,4 +1,23 @@
 #!r6rs
+;;; lazy-lists.sls --- odd lazy lists
+
+;; Copyright (C) 2011 Ian Price <ianprice90@googlemail.com>
+
+;; Author: Ian Price <ianprice90@googlemail.com>
+
+;; This program is free software, you can redistribute it and/or
+;; modify it under the terms of the new-style BSD license.
+
+;; You should have received a copy of the BSD license along with this
+;; program. If not, see <http://www.debian.org/misc/bsd.license>.
+
+;;; Commentary:
+
+;; If you want real lazy lists, use SRFI 41, but Okazaki uses 'odd'
+;; lists, so I wrote a quick implementation.
+
+;;; Code:
+
 (library (pfds private lazy-lists)
 (export cons*
         tail
@@ -13,11 +32,6 @@
         (rnrs r5rs)
         )
 
-;;; Lazy Lists
-;;
-;; If you want real lazy lists, use SRFI 41, but Okazaki uses 'odd'
-;; lists, so I wrote a quick implementation.
-;;
 (define-syntax cons*
   (syntax-rules ()
     ((cons* a b)

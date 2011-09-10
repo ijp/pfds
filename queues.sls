@@ -1,13 +1,23 @@
 #!r6rs
-;; Purely functional queues
+;;; queues.sls --- Purely functional queues
+
+;; Copyright (C) 2011 Ian Price <ianprice90@googlemail.com>
+
+;; Author: Ian Price <ianprice90@googlemail.com>
+
+;; This program is free software, you can redistribute it and/or
+;; modify it under the terms of the new-style BSD license.
+
+;; You should have received a copy of the BSD license along with this
+;; program. If not, see <http://www.debian.org/misc/bsd.license>.
+
+;;; Commentary:
 ;;
 ;; A scheme translation of "Simple and Efficient Purely Functional
 ;; Queues and Deques" by Chris Okazaki
 ;;
-;; by Ian Price, 2011-09-02
 ;;
-;;
-;; Documentation:
+;;; Documentation:
 ;;
 ;; make-queue : () -> queue
 ;; returns a queue containing no items
