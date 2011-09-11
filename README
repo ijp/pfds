@@ -1,0 +1,20 @@
+* Purely Functional Data Structures in Scheme     -*- org -*-
+
+** About
+pfds is a set of purely functional data structures written in R6RS
+Scheme. It has been tested with Racket and Guile 2. Right now it
+contains
+- queues
+- deques
+with more to come, time permitting.
+
+** Installation
+Just clone it somewhere on your $GUILE_LOAD_PATH and you're
+done. Alternatively, a pkg-list.scm file is provided for use with the
+dorodango package manager.If you want to run the tests file, you will
+need trc-testing from the [[http://gitorious.org/wak][wak project]].
+
+** Documentation
+Documentation is provided at the top of the respective files. You may
+also be interested in the paper [[http://www.eecs.usma.edu/webs/people/okasaki/pubs.html#jfp95]["Simple and Efficient Purely
+Functional Queues and Deques"]] by Chris Okasaki.
