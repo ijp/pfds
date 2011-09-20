@@ -25,18 +25,18 @@
 ;; deque-empty? : deque -> boolean
 ;; returns true if there are no items in the deque, false otherwise
 ;;
-;; insert-front : deque any -> deque
+;; enqueue-front : deque any -> deque
 ;; returns a new deque with the inserted item at the front
 ;;
-;; insert-rear : deque any -> deque
+;; enqueue-rear : deque any -> deque
 ;; returns a new deque with the inserted item at the rear
 ;;
-;; remove-front : deque -> any queue
+;; dequeue-front : deque -> any queue
 ;; returns two values, the item at the front of the deque, and a new
 ;; deque containing all the other items
 ;; raises a &deque-empty condition if the deque is empty
 ;;
-;; remove-rear : deque -> any queue
+;; dequeue-rear : deque -> any queue
 ;; returns two values, the item at the rear of the deque, and a new
 ;; deque containing all the other items
 ;; raises a &deque-empty condition if the deque is empty
@@ -49,10 +49,10 @@
         deque?
         deque-length
         deque-empty?
-        insert-front
-        insert-rear
-        remove-front
-        remove-rear
+        enqueue-front
+        enqueue-rear
+        dequeue-front
+        dequeue-rear
         deque-empty-condition?
         )
 (import (except (rnrs) cons*)
@@ -90,7 +90,7 @@
 (define (deque-empty? deque)
   (zero? (deque-length deque)))
 
-(define (insert-front deque item)
+(define (enqueue-front deque item)
   (let ((len (deque-length deque))
         (l (deque-l deque))
         (r (deque-r deque))
@@ -100,7 +100,7 @@
         (r^ (deque-r^ deque)))
     (makedq (+ 1 len) (+ 1 lenL) lenR (cons* item l) r (tail l^) (tail r^))))
 
-(define (insert-rear deque item)
+(define (enqueue-rear deque item)
   (let ((len (deque-length deque))
         (l (deque-l deque))
         (r (deque-r deque))
@@ -110,11 +110,11 @@
         (r^ (deque-r^ deque)))
     (makedq (+ 1 len) lenL (+ 1 lenR) l (cons* item r) (tail l^) (tail r^))))
 
-(define (remove-front deque)
+(define (dequeue-front deque)
   (when (deque-empty? deque)
     (raise (condition
             (make-deque-empty-condition)
-            (make-who-condition 'remove-front)
+            (make-who-condition 'dequeue-front)
             (make-message-condition "There are no elements to remove")
             (make-irritants-condition (list deque)))))
   (let ((len (deque-length deque))
@@ -135,11 +135,11 @@
                         (tail (tail l^))
                         (tail (tail r^)))))))
 
-(define (remove-rear deque)
+(define (dequeue-rear deque)
   (when (deque-empty? deque)
     (raise (condition
             (make-deque-empty-condition)
-            (make-who-condition 'remove-rear)
+            (make-who-condition 'dequeue-rear)
             (make-message-condition "There are no elements to remove")
             (make-irritants-condition (list deque)))))
   (let ((len (deque-length deque))
