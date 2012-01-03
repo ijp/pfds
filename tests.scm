@@ -1,5 +1,5 @@
 #!r6rs
-;; Copyright (C) 2011 Ian Price <ianprice90@googlemail.com>
+;; Copyright (C) 2011,2012 Ian Price <ianprice90@googlemail.com>
 
 ;; Author: Ian Price <ianprice90@googlemail.com>
 
@@ -13,12 +13,30 @@
 (import (rnrs)
         (pfds queues)
         (pfds deques)
+        (pfds bbtrees)
         (wak trc-testing))
 
 (define (foldl kons knil list)
   (if (null? list)
       knil
       (foldl kons (kons (car list) knil) (cdr list))))
+
+(define-syntax test-exn
+  (syntax-rules ()
+    ((test-exn exception-pred? body)
+     (test-eqv #t
+               (guard (exn ((exception-pred? exn) #t)
+                           (else #f))
+                 body
+                 #f)))))
+
+(define-syntax test-no-exn
+  (syntax-rules ()
+    ((test-no-exn body)
+     (test-eqv #t
+               (guard (exn (else #f))
+                 body
+                 #t)))))
 
 (define-test-suite pfds
   "Test suite for libraries under the (pfds) namespace")
@@ -176,5 +194,42 @@
       (test-eqv 1 item2)
       (test-predicate deque-empty? deque2))))
 
+
+(define-test-suite (bbtrees pfds)
+  "Tests for the bounded balance tree imlementation")
+
+(define-test-case bbtrees empty-tree ()
+  (test-predicate bbtree? (make-bbtree <))
+  (test-eqv 0 (bbtree-size (make-bbtree <))))
+
+(define-test-case bbtrees bbtree-set ()
+  (let* ([tree1 (bbtree-set (make-bbtree <) 1 'a)]
+         [tree2 (bbtree-set tree1 2 'b)]
+         [tree3 (bbtree-set tree2 1 'c )])
+    (test-eqv 1 (bbtree-size tree1))
+    (test-eqv 'a (bbtree-ref tree1 1))
+    (test-eqv 2 (bbtree-size tree2))
+    (test-eqv 'b (bbtree-ref tree2 2))
+    (test-eqv 2 (bbtree-size tree3))
+    (test-eqv 'c (bbtree-ref tree3 1))
+    (test-exn assertion-violation? (bbtree-ref tree3 20))))
+
+(define-test-case bbtrees bbtree-delete ()
+  (let* ([tree1 (bbtree-set (bbtree-set (bbtree-set (make-bbtree string<?) "a" 3)
+                                        "b"
+                                        8)
+                            "c"
+                            19)]
+         [tree2 (bbtree-delete tree1 "b")]
+         [tree3 (bbtree-delete tree2 "a")])
+    (test-eqv 3 (bbtree-size tree1))
+    (test-eqv #t (bbtree-contains? tree1 "b"))
+    (test-eqv #t (bbtree-contains? tree1 "a"))
+    (test-eqv 2 (bbtree-size tree2))
+    (test-eqv #f (bbtree-contains? tree2 "b"))
+    (test-eqv #t (bbtree-contains? tree2 "a"))
+    (test-eqv 1 (bbtree-size tree3))
+    (test-eqv #f (bbtree-contains? tree3 "a"))
+    (test-no-exn (bbtree-delete (bbtree-delete tree3 "a") "a"))))
 
 (run-test pfds)
