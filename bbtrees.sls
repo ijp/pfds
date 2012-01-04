@@ -51,6 +51,13 @@
         bbtree-set
         bbtree-delete
         bbtree-contains?
+        bbtree-ordering-procedure
+        bbtree-traverse
+        bbtree-fold
+        bbtree-fold-right
+        bbtree-map
+        bbtree->alist
+        alist->bbtree
         )
 
 (import (rnrs))
@@ -267,5 +274,58 @@
           (lambda (_) #t)
           (lambda () #f)
           (bbtree-ordering-procedure bbtree)))
+
+;; iterators
+
+(define (traverse traverser base tree)
+  (define (left base)
+    (traverse traverser base (node-left tree)))
+  (define (right base)
+    (traverse traverser base (node-right tree)))
+  (if (empty? tree)
+      base
+      (traverser (node-key tree)
+                 (node-value tree)
+                 left
+                 right
+                 base)))
+
+(define (bbtree-traverse traverser base bbtree)
+  (assert (bbtree? bbtree))
+  (traverse traverser base (bbtree-tree bbtree)))
+
+;; use combine instead of cons?
+(define (bbtree-fold cons base bbtree)
+  (assert (bbtree? bbtree))
+  (traverse (lambda (k v l r n)
+              (r (cons k v (l n))))
+            base
+            (bbtree-tree bbtree)))
+
+(define (bbtree-fold-right cons base bbtree)
+  (assert (bbtree? bbtree))
+  (traverse (lambda (k v l r n)
+              (l (cons k v (r n))))
+            base
+            (bbtree-tree bbtree)))
+
+;; I could do this more efficiently, but is it worth it?
+(define (bbtree-map mapper bbtree)
+  (bbtree-fold (lambda (key value tree)
+                 (bbtree-set tree key (mapper value)))
+               (make-bbtree (bbtree-ordering-procedure bbtree))
+               bbtree))
+
+(define (alist-cons a b c)
+  (cons (cons a b) c))
+
+(define (bbtree->alist bbtree)
+  (bbtree-fold-right alist-cons '() bbtree))
+
+(define (alist->bbtree list <)
+  (fold-left (lambda (tree kv-pair)
+               (bbtree-set tree (car kv-pair) (cdr kv-pair)))
+             (make-bbtree <)
+             list))
 
 )
