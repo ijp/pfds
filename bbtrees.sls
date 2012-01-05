@@ -294,18 +294,17 @@
   (assert (bbtree? bbtree))
   (traverse traverser base (bbtree-tree bbtree)))
 
-;; use combine instead of cons?
-(define (bbtree-fold cons base bbtree)
+(define (bbtree-fold combine base bbtree)
   (assert (bbtree? bbtree))
   (traverse (lambda (k v l r n)
-              (r (cons k v (l n))))
+              (r (combine k v (l n))))
             base
             (bbtree-tree bbtree)))
 
-(define (bbtree-fold-right cons base bbtree)
+(define (bbtree-fold-right combine base bbtree)
   (assert (bbtree? bbtree))
   (traverse (lambda (k v l r n)
-              (l (cons k v (r n))))
+              (l (combine k v (r n))))
             base
             (bbtree-tree bbtree)))
 
