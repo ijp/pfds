@@ -43,6 +43,50 @@
 ;; bbtree-contains? : bbtree any -> boolean
 ;; returns #t if there is association for key in the bbtree, false
 ;; otherwise
+;;
+;; bbtree-traverse : (any any (any -> any) (any -> any) any) any bbtree -> any
+;; A general tree traversal procedure. Returns the value of applying
+;; the traverser procedure to the current node's key, value, a
+;; procedure to traverse the left subtree, a procedure to traverse the
+;; right subtree, and a base value. The subtree traversal procedures
+;; both take a base argument, and call bbtree-traverse recursively on
+;; the appropriate subtree. It is mostly useful for implementing
+;; other, more specific tree traversal procedures. For example,
+;;   (define (l-to-r-pre-order cons base bbtree)
+;;     (bbtree-traverse (lambda (key value left right base)
+;;                        (r (l (cons key value base))))
+;;                      base
+;;                      bbtree))
+;; implements a left-to-right pre-order traversal variant of bbtree-fold
+;;
+;; bbtree-fold : (any any any -> any) any bbtree -> any
+;; returns the value obtained by the iterating the combine procedure
+;; over each node in the tree. The combine procedure takes three
+;; arguments, the key and value of the current node, and an
+;; accumulator value, and its return value is used as the accumulator
+;; value for the next node. The initial accumulator value is provided
+;; by the base argument. bbtree-fold performs an left-to-right
+;; in-order traversal or "minimum key to maximum key".
+;;
+;; bbtree-fold-right : (any any any -> any) any bbtree -> any
+;; like bbtree-fold, but it performs a right-to-left in-order
+;; traversal instead (i.e. maximum to minimum).
+;;
+;; bbtree-map : (any -> any) bbtree -> bbtree
+;; returns the tree obtained by updating the value of each node with
+;; the result of applying the procedure to its value.
+;;
+;; bbtree->alist : bbtree -> Listof(Pairs)
+;; returns the key value associations of the bbtree as a list of
+;; pairs. The list returned is in sorted order according to the
+;; ordering procedure of the bbtree. A consequence of this is that one
+;; could write a sort procedure for lists of pairs as
+;;   (define (alist-sort alist <)
+;;     (bbtree->alist (alist->bbtree alist <)))
+;;
+;; alist->bbtree : Listof(Pairs) -> (any any -> boolean) -> bbtree
+;; returns the bbtree containing each of the key value pairs in the
+;; alist, using the < argument as the ordering procedure.
 (library (pfds bbtrees)
 (export make-bbtree
         bbtree?
