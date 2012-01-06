@@ -87,6 +87,10 @@
 ;; alist->bbtree : Listof(Pairs) -> (any any -> boolean) -> bbtree
 ;; returns the bbtree containing each of the key value pairs in the
 ;; alist, using the < argument as the ordering procedure.
+;;
+;; bbtree-keys : bbtree -> Listof(any)
+;; returns a list containing all the keys of the bbtree. The keys are
+;; sorted according to the bbtree's ordering procedure.
 (library (pfds bbtrees)
 (export make-bbtree
         bbtree?
@@ -102,6 +106,7 @@
         bbtree-map
         bbtree->alist
         alist->bbtree
+        bbtree-keys
         )
 
 (import (rnrs))
@@ -371,4 +376,9 @@
              (make-bbtree <)
              list))
 
+(define (bbtree-keys bbtree)
+  (bbtree-fold-right (lambda (key value base)
+                       (cons key base))
+                     '()
+                     bbtree))
 )
