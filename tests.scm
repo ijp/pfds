@@ -232,4 +232,44 @@
     (test-eqv #f (bbtree-contains? tree3 "a"))
     (test-no-exn (bbtree-delete (bbtree-delete tree3 "a") "a"))))
 
+(define-test-case bbtrees bbtree-folds
+  (let ((bb (alist->bbtree '(("foo" . 1) ("bar" . 12) ("baz" . 7)) string<?)))
+    (test-case bbtree-folds ()
+      ;; empty case
+      (test-eqv #t (bbtree-fold (lambda args #f) #t (make-bbtree >)))      
+      (test-eqv #t (bbtree-fold-right (lambda args #f) #t (make-bbtree >)))
+      ;; associative operations
+      (test-eqv 20 (bbtree-fold (lambda (key value accum) (+ value accum)) 0 bb))
+      (test-eqv 20 (bbtree-fold-right (lambda (key value accum) (+ value accum)) 0 bb))
+      ;; non-associative operations
+      (test-equal '("foo" "baz" "bar")
+                  (bbtree-fold (lambda (key value accum) (cons key accum)) '() bb))
+      (test-equal '("bar" "baz" "foo")
+                  (bbtree-fold-right (lambda (key value accum) (cons key accum)) '() bb)))))
+
+(define-test-case bbtrees bbtree-map
+  (let ((empty (make-bbtree <))
+        (bb (alist->bbtree '((#\a . foo) (#\b . bar) (#\c . baz) (#\d . quux))
+                           char<?)))
+    (test-case bbtree-map ()
+      (test-eqv 0 (bbtree-size (bbtree-map (lambda (x) 'foo) empty)))
+      (test-equal '((#\a foo . foo) (#\b bar . bar) (#\c baz . baz) (#\d quux . quux))
+                  (bbtree->alist (bbtree-map (lambda (x) (cons x x)) bb)))
+      (test-equal '((#\a . "foo") (#\b . "bar") (#\c . "baz") (#\d . "quux"))
+                  (bbtree->alist (bbtree-map symbol->string bb))))))
+
+(define-test-case bbtrees conversion ()
+  (test-eqv '() (bbtree->alist (make-bbtree <)))
+  (test-eqv 0 (bbtree-size (alist->bbtree '() <)))
+  (test-equal '(("bar" . 12) ("baz" . 7) ("foo" . 1))
+              (bbtree->alist (alist->bbtree '(("foo" . 1) ("bar" . 12) ("baz" . 7)) string<?)))
+  (let ((l '(48 2 89 23 7 11 78))
+        (tree-sort  (lambda (< l)
+                      (map car
+                           (bbtree->alist
+                            (alist->bbtree (map (lambda (x) (cons x 'dummy))
+                                                l)
+                                           <))))))
+    (test-equal (list-sort < l) (tree-sort < l))))
+
 (run-test pfds)
