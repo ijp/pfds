@@ -186,8 +186,8 @@
           [rl-right (node-right r-left)])
       (node* rl-key
              rl-value
-             (node* r-key r-value rl-right r-right)
-             (node* key value left rl-left)))))
+             (node* key value left rl-left)
+             (node* r-key r-value rl-right r-right)))))
 
 (define (rotate-right/double key value left right)
   (let ([l-key   (node-key left)]
