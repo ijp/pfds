@@ -291,7 +291,14 @@
       ;; union favours values in first argument when key exists in both
       (let ((union (bbtree-union bbtree1 bbtree2)))
         (test-eqv 105 (bbtree-ref union #\i))
-        (test-eqv 108 (bbtree-ref union #\l))))))
+        (test-eqv 108 (bbtree-ref union #\l)))
+      ;; check this holds on larger bbtrees
+      (let* ([l (string->list "abcdefghijlmnopqrstuvwxyz")]
+             [b1 (map (lambda (x) (cons x (char->integer x))) l)]
+             [b2 (map (lambda (x) (cons x #f)) l)])
+        (test-equal b1
+                    (bbtree->alist (bbtree-union (alist->bbtree b1 char<?)
+                                                 (alist->bbtree b2 char<?))))))))
 
 (define-test-case bbtrees bbtree-intersection
   (let ([empty (make-bbtree char<?)]
@@ -308,6 +315,13 @@
       ;; intersection favours values in first set
       (test-equal '((#\i . 105) (#\l . 108))
                   (bbtree->alist (bbtree-intersection bbtree1 bbtree2)))
+      ;; check this holds on larger bbtrees
+      (let* ([l (string->list "abcdefghijlmnopqrstuvwxyz")]
+             [b1 (map (lambda (x) (cons x (char->integer x))) l)]
+             [b2 (map (lambda (x) (cons x #f)) l)])
+        (test-equal b1
+                    (bbtree->alist (bbtree-intersection (alist->bbtree b1 char<?)
+                                                        (alist->bbtree b2 char<?)))))
       ;; definition of intersection is equivalent to two differences
       (test-equal (bbtree->alist (bbtree-intersection bbtree1 bbtree2))
                   (bbtree->alist

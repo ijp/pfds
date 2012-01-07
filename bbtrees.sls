@@ -305,8 +305,8 @@
                [r* (split-gt bb2 (node-key bb1) <)])
            (concat3 (node-key bb1)
                     (node-value bb1)
-                    (union l* (node-left bb1) <)
-                    (union r* (node-right bb1) <)
+                    (union (node-left bb1) l* <)
+                    (union (node-right bb1) r* <)
                     <))]))
 
 (define (concat3 key value left right lt)
