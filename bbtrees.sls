@@ -297,18 +297,6 @@
             (delete-min (node-left tree))
             (node-right tree)))))
 
-(define (union bb1 bb2 <)
-  (cond [(empty? bb1) bb2]
-        [(empty? bb2) bb1]
-        [else
-         (let ([l* (split-lt bb2 (node-key bb1) <)]
-               [r* (split-gt bb2 (node-key bb1) <)])
-           (concat3 (node-key bb1)
-                    (node-value bb1)
-                    (union (node-left bb1) l* <)
-                    (union (node-right bb1) r* <)
-                    <))]))
-
 (define (concat3 key value left right lt)
   (cond [(empty? left)
          (add right key value lt)]
@@ -396,6 +384,93 @@
                         <)
                (concat (intersection (node-left t1) l* <)
                        (intersection (node-right t1) r* <))))]))
+
+;;; hedge union
+
+;; ensures that tree is either empty, or root lies in range low--high
+(define (trim low high tree <)
+  (cond [(empty? tree) tree]
+        [(< low (node-key tree))
+         (if (< (node-key tree) high)
+             tree
+             (trim low high (node-left tree) <))]
+        [else
+         (trim low high (node-right tree) <)]))
+
+(define (uni-bd tree1 tree2 low high <)
+  (cond [(empty? tree2) tree1]
+        [(empty? tree1)
+         (concat3 (node-key tree2)
+                  (node-value tree2)
+                  (split-gt (node-left tree2) low <)
+                  (split-lt (node-right tree2) high <)
+                  <)]
+        [else
+         (let ([key (node-key tree1)])
+           (concat3 key
+                    (node-value tree1)
+                    (uni-bd (node-left tree1) (trim low key tree2 <) low key <)
+                    (uni-bd (node-right tree1) (trim key high tree2 <) key high <)
+                    <))]))
+
+;; specialisation of trim for high=+infinity
+(define (trim-low low tree <)
+  (cond [(empty? tree) tree]
+        [(< low (node-key tree)) tree]
+        [else
+         (trim-low low (node-right tree) <)]))
+
+;; trim for low=-infinity
+(define (trim-high high tree <)
+  (cond [(empty? tree) tree]
+        [(< (node-key tree) high) tree]
+        [else
+         (trim-high high (node-left tree) <)]))
+
+;; uni-bd for low=-infinity
+(define (uni-high tree1 tree2 high <)
+  (cond [(empty? tree2) tree1]
+        [(empty? tree1)
+         (concat3 (node-key tree2)
+                  (node-value tree2)
+                  (node-left tree2)
+                  (split-lt (node-right tree2) high <)
+                  <)]
+        [else
+         (let ([key (node-key tree1)])
+           (concat3 key
+                    (node-value tree1)
+                    (uni-high (node-left tree1) (trim-high key tree2 <) key <)
+                    (uni-bd (node-right tree1) (trim key high tree2 <) key high <)
+                    <))]))
+
+;; uni-bd for high=+infinity
+(define (uni-low tree1 tree2 low <)
+  (cond [(empty? tree2) tree1]
+        [(empty? tree1)
+         (concat3 (node-key tree2)
+                  (node-value tree2)
+                  (split-gt (node-left tree2) low <)
+                  (node-right tree2)
+                  <)]
+        [else
+         (let ([key (node-key tree1)])
+           (concat3 key
+                    (node-value tree1)
+                    (uni-bd (node-left tree1) (trim low key tree2 <) low key <)
+                    (uni-low (node-right tree1) (trim-low key tree2 <) key <)
+                    <))]))
+
+(define (hedge-union tree1 tree2 <)
+  (cond [(empty? tree2) tree1]
+        [(empty? tree1) tree2]
+        [else
+         (let ([key (node-key tree1)])
+           (concat3 key
+                    (node-value tree1)
+                    (uni-high (node-left tree1) (trim-high key tree2 <) key <)
+                    (uni-low (node-right tree1) (trim-low key tree2 <) key <)
+                    <))]))
 
 ;;; External procedures
 
@@ -501,9 +576,9 @@
 
 (define (bbtree-union bbtree1 bbtree2)
   (update-tree bbtree1
-               (union (bbtree-tree bbtree1)
-                      (bbtree-tree bbtree2)
-                      (bbtree-ordering-procedure bbtree1))))
+               (hedge-union (bbtree-tree bbtree1)
+                            (bbtree-tree bbtree2)
+                            (bbtree-ordering-procedure bbtree1))))
 
 (define (bbtree-difference bbtree1 bbtree2)
   (update-tree bbtree1
