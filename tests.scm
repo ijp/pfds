@@ -272,4 +272,62 @@
                                            <))))))
     (test-equal (list-sort < l) (tree-sort < l))))
 
+(define-test-case bbtrees bbtree-union
+  (let ([empty (make-bbtree char<?)]
+        [bbtree1 (alist->bbtree '((#\g . 103) (#\u . 117) (#\i . 105) (#\l . 108) (#\e . 101))
+                                char<?)]
+        [bbtree2 (alist->bbtree '((#\l . 8) (#\i . 5) (#\s . 15) (#\p . 12))
+                                char<?)])
+    (test-case bbtree-union ()
+      (test-eqv 0 (bbtree-size (bbtree-union empty empty)))
+      (test-eqv (bbtree-size bbtree1)
+                (bbtree-size (bbtree-union empty bbtree1)))
+      (test-eqv (bbtree-size bbtree1)
+                (bbtree-size (bbtree-union bbtree1 empty)))
+      (test-eqv (bbtree-size bbtree1)
+                (bbtree-size (bbtree-union bbtree1 bbtree1)))
+      (test-equal '(#\e #\g #\i #\l #\p #\s #\u)
+                  (bbtree-keys (bbtree-union bbtree1 bbtree2)))
+      ;; union favours values in first argument when key exists in both
+      (let ((union (bbtree-union bbtree1 bbtree2)))
+        (test-eqv 105 (bbtree-ref union #\i))
+        (test-eqv 108 (bbtree-ref union #\l))))))
+
+(define-test-case bbtrees bbtree-intersection
+  (let ([empty (make-bbtree char<?)]
+        [bbtree1 (alist->bbtree '((#\g . 103) (#\u . 117) (#\i . 105) (#\l . 108) (#\e . 101))
+                                char<?)]
+        [bbtree2 (alist->bbtree '((#\l . 8) (#\i . 5) (#\s . 15) (#\p . 12))
+                                char<?)])
+    (test-case bbtree-intersection ()
+      (test-eqv 0 (bbtree-size (bbtree-intersection empty empty)))
+      (test-eqv 0 (bbtree-size (bbtree-intersection bbtree1 empty)))
+      (test-eqv 0 (bbtree-size (bbtree-intersection empty bbtree1)))
+      (test-eqv (bbtree-size bbtree1)
+                (bbtree-size (bbtree-intersection bbtree1 bbtree1)))
+      ;; intersection favours values in first set
+      (test-equal '((#\i . 105) (#\l . 108))
+                  (bbtree->alist (bbtree-intersection bbtree1 bbtree2)))
+      ;; definition of intersection is equivalent to two differences
+      (test-equal (bbtree->alist (bbtree-intersection bbtree1 bbtree2))
+                  (bbtree->alist
+                   (bbtree-difference bbtree1
+                                      (bbtree-difference bbtree1 bbtree2)))))))
+
+(define-test-case bbtrees bbtree-difference
+  (let ([empty (make-bbtree char<?)]
+        [bbtree1 (alist->bbtree '((#\g . 103) (#\u . 117) (#\i . 105) (#\l . 108) (#\e . 101))
+                                char<?)]
+        [bbtree2 (alist->bbtree '((#\l . 8) (#\i . 5) (#\s . 15) (#\p . 12))
+                                char<?)])
+    (test-case bbtree-difference ()
+      (test-eqv 0 (bbtree-size (bbtree-difference empty empty)))
+      (test-eqv 5 (bbtree-size (bbtree-difference bbtree1 empty)))
+      (test-eqv 0 (bbtree-size (bbtree-difference empty bbtree1)))
+      (test-eqv 0 (bbtree-size (bbtree-difference bbtree1 bbtree1)))
+      (test-equal '((#\e . 101) (#\g . 103) (#\u . 117))
+                  (bbtree->alist (bbtree-difference bbtree1 bbtree2)))
+      (test-equal '((#\p . 12) (#\s . 15))
+                  (bbtree->alist (bbtree-difference bbtree2 bbtree1))))))
+
 (run-test pfds)

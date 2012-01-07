@@ -91,6 +91,20 @@
 ;; bbtree-keys : bbtree -> Listof(any)
 ;; returns a list containing all the keys of the bbtree. The keys are
 ;; sorted according to the bbtree's ordering procedure.
+;;
+;; bbtree-union : bbtree bbtree -> bbtree
+;; returns a bbtree containing the union of the associations in
+;; bbtree1 and bbtree2. Where the same key occurs in both, the value
+;; in bbtree1 is preferred.
+;; 
+;; bbtree-difference : bbtree bbtree -> bbtree
+;; returns a bbtree containing the all the associations in bbtree1,
+;; which do not occur in bbtree2.
+;;
+;; bbtree-intersection : bbtree bbtree -> bbtree
+;; returns a bbtree containing all the associations which appear in
+;; both bbtree1 and bbtree2. The value in bbtree1 are preferred over
+;; those in bbtree2.
 (library (pfds bbtrees)
 (export make-bbtree
         bbtree?
@@ -107,6 +121,9 @@
         bbtree->alist
         alist->bbtree
         bbtree-keys
+        bbtree-union
+        bbtree-difference
+        bbtree-intersection
         )
 
 (import (rnrs))
@@ -280,6 +297,79 @@
             (delete-min (node-left tree))
             (node-right tree)))))
 
+(define (union bb1 bb2 <)
+  (cond [(empty? bb1) bb2]
+        [(empty? bb2) bb1]
+        [else
+         (let ([l* (split-lt bb2 (node-key bb1) <)]
+               [r* (split-gt bb2 (node-key bb1) <)])
+           (concat3 (node-key bb1)
+                    (node-value bb1)
+                    (union l* (node-left bb1) <)
+                    (union r* (node-right bb1) <)
+                    <))]))
+
+(define (concat3 key value left right lt)
+  (cond [(empty? left)
+         (add right key value lt)]
+        [(empty? right)
+         (add left key value lt)]
+        [(< (* weight (size left)) (size right))
+         (T (node-key right)
+            (node-value right)
+            (concat3 key value left (node-left right) lt)
+            (node-right right))]
+        [(< (* weight (size right)) (size left))
+         (T (node-key left)
+            (node-value left)
+            (node-left left)
+            (concat3 key value (node-right left) right lt))]
+        [else
+         (node* key value left right)]))
+
+(define (split-lt tree key <)
+  (cond [(empty? tree) tree]
+        [(< key (node-key tree))
+         (split-lt (node-left tree) key <)]
+        [(< (node-key tree) key)
+         (concat3 (node-key tree)
+                  (node-value tree)
+                  (node-left tree)
+                  (split-lt (node-right tree) key <)
+                  <)]
+        [else (node-left tree)]))
+
+(define (split-gt tree key <)
+  (cond [(empty? tree) tree]
+        [(< key (node-key tree))
+         (concat3 (node-key tree)
+                  (node-value tree)
+                  (split-gt (node-left tree) key <)
+                  (node-right tree)
+                  <)]
+        [(< (node-key tree) key)
+         (split-gt (node-right tree) key <)]
+        [else (node-right tree)]))
+
+(define (difference tree1 tree2 <)
+  (cond [(empty? tree1) tree1]
+        [(empty? tree2) tree1]
+        [else
+         (let ([l* (split-lt tree1 (node-key tree2) <)]
+               [r* (split-gt tree1 (node-key tree2) <)])
+           (concat (difference l* (node-left tree2) <)
+                   (difference r* (node-right tree2) <)
+                   <))]))
+
+(define (concat t1 t2 lt)
+  (if (empty? t2)
+      t1
+      (let-values (((k v) (min t2)))
+        (concat3 k v t1 (delete-min t2) lt))))
+
+(define (intersection t1 t2 <)
+  (difference t1 (difference t1 t2 <) <))
+
 ;;; External procedures
 
 (define (make-bbtree <)
@@ -381,4 +471,23 @@
                        (cons key base))
                      '()
                      bbtree))
+
+(define (bbtree-union bbtree1 bbtree2)
+  (update-tree bbtree1
+               (union (bbtree-tree bbtree1)
+                      (bbtree-tree bbtree2)
+                      (bbtree-ordering-procedure bbtree1))))
+
+(define (bbtree-difference bbtree1 bbtree2)
+  (update-tree bbtree1
+               (difference (bbtree-tree bbtree1)
+                           (bbtree-tree bbtree2)
+                           (bbtree-ordering-procedure bbtree1))))
+
+(define (bbtree-intersection bbtree1 bbtree2)
+  (update-tree bbtree1
+               (intersection (bbtree-tree bbtree1)
+                             (bbtree-tree bbtree2)
+                             (bbtree-ordering-procedure bbtree1))))
+
 )
