@@ -358,17 +358,44 @@
          (let ([l* (split-lt tree1 (node-key tree2) <)]
                [r* (split-gt tree1 (node-key tree2) <)])
            (concat (difference l* (node-left tree2) <)
-                   (difference r* (node-right tree2) <)
-                   <))]))
+                   (difference r* (node-right tree2) <)))]))
 
-(define (concat t1 t2 lt)
-  (if (empty? t2)
-      t1
-      (let-values (((k v) (min t2)))
-        (concat3 k v t1 (delete-min t2) lt))))
+(define (concat left right)
+  (cond [(empty? left) right]
+        [(empty? right) left]
+        [(< (* weight (size left)) (size right))
+         (T (node-key right)
+            (node-value right)
+            (concat left (node-left right))
+            (node-right right))]
+        [(< (* weight (size right)) (size left))
+         (T (node-key left)
+            (node-value left)
+            (node-left left)
+            (concat (node-right left) right))]
+        [else
+         (let-values (((k v) (min right)))
+           (T k v left (delete-min right)))]))
+
+(define (member key tree <)
+  (define (yes x) #t)
+  (define (no) #f)
+  (lookup tree key yes no <))
 
 (define (intersection t1 t2 <)
-  (difference t1 (difference t1 t2 <) <))
+  (cond [(empty? t1) t1]
+        [(empty? t2) t2]
+        [else
+         (let ([l* (split-lt t2 (node-key t1) <)]
+               [r* (split-gt t2 (node-key t1) <)])
+           (if (member (node-key t1) t2 <)
+               (concat3 (node-key t1)
+                        (node-value t1)
+                        (intersection (node-left t1) l* <)
+                        (intersection (node-right t1) r* <)
+                        <)
+               (concat (intersection (node-left t1) l* <)
+                       (intersection (node-right t1) r* <))))]))
 
 ;;; External procedures
 
