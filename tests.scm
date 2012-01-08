@@ -344,4 +344,20 @@
       (test-equal '((#\p . 12) (#\s . 15))
                   (bbtree->alist (bbtree-difference bbtree2 bbtree1))))))
 
+(define-test-case bbtrees bbtree-indexing
+  (let* ([l (string->list "abcdefghijklmno")]
+         [bb (alist->bbtree (map (lambda (x) (cons x #f)) l) char<?)])
+    "tnerfgxukscjmwhaod yz"
+    (test-case bbtree-difference ()
+      (test-equal '(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14)
+                  (map (lambda (x) (bbtree-index bb x)) l))
+      (test-exn assertion-violation? (bbtree-index bb #\z))
+      (test-equal l
+                  (map (lambda (x)
+                         (let-values ([(k v) (bbtree-ref/index bb x)])
+                           k))
+                       '(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14)))
+      (test-exn assertion-violation? (bbtree-ref/index bb -1))
+      (test-exn assertion-violation? (bbtree-ref/index bb 15)))))
+
 (run-test pfds)
