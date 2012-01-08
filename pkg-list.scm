@@ -1,4 +1,4 @@
-(package (pfds (0))
+(package (pfds (0 1))
   (depends (wak-trc-testing))
   (synopsis "Purely Functional Data Structures")
   (description
@@ -7,6 +7,4 @@
   (homepage "http://github.com/ijp/pfds")
   (libraries
    (sls -> "pfds")
-   ("private" -> ("pfds" "private")))
-  (programs
-   (("tests.scm") -> "pfds-tests.scm")))
+   ("private" -> ("pfds" "private"))))
