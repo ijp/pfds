@@ -138,7 +138,7 @@
         bbtree-ref/index
         )
 
-(import (rnrs))
+(import (except (rnrs) min member))
 
 (define weight 4)
 
