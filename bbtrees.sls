@@ -105,6 +105,16 @@
 ;; returns a bbtree containing all the associations which appear in
 ;; both bbtree1 and bbtree2. The value in bbtree1 are preferred over
 ;; those in bbtree2.
+;;
+;; bbtree-index bbtree any -> non-negative integer
+;; returns the index of the key in the bbtree. Index is an integer
+;; between 0 and size - 1, with the a key having a lower index than
+;; another if first-key < second-key, according to the bbtree ordering
+;; procedure.
+;;
+;; bbtree-ref/index bbtree non-negative-integer -> any any
+;; returns the key and value of the association in the bbtree at the
+;; given index.
 (library (pfds bbtrees)
 (export make-bbtree
         bbtree?
@@ -124,6 +134,8 @@
         bbtree-union
         bbtree-difference
         bbtree-intersection
+        bbtree-index
+        bbtree-ref/index
         )
 
 (import (rnrs))
@@ -472,6 +484,33 @@
                     (uni-low (node-right tree1) (trim-low key tree2 <) key <)
                     <))]))
 
+;;; rank and indexing
+
+(define (rank tree key <)
+  (cond [(empty? tree);; error
+         (assertion-violation 'rank "Key is not in the tree" key)]
+        [(< key (node-key tree))
+         (rank (node-left tree) key <)]
+        [(< (node-key tree) key)
+         (+ (rank (node-right tree) key <)
+            (size (node-left tree))
+            1)]
+        [else
+         (size (node-left tree))]))
+
+(define (index tree idx)
+  (if (empty? tree)
+      (assertion-violation 'index "No value at index" idx)
+      (let ([l-size (size (node-left tree))])
+        (cond [(< idx l-size)
+               (index (node-left tree) idx)]
+              [(< l-size idx)
+               (index (node-right tree)
+                      (- idx l-size 1))]
+              [else
+               (values (node-key tree)
+                       (node-value tree))]))))
+
 ;;; External procedures
 
 (define (make-bbtree <)
@@ -591,5 +630,22 @@
                (intersection (bbtree-tree bbtree1)
                              (bbtree-tree bbtree2)
                              (bbtree-ordering-procedure bbtree1))))
+
+(define (bbtree-index bbtree key)
+  ;; maybe this should return #f instead of throwing an exception?
+  (assert (bbtree? bbtree))
+  (rank (bbtree-tree bbtree)
+        key
+        (bbtree-ordering-procedure bbtree)))
+
+(define (bbtree-ref/index bbtree idx)
+  (assert (bbtree? bbtree))
+  (let ((tree (bbtree-tree bbtree)))
+    (unless (and (integer? idx)
+                 (<= 0 idx (- (size tree) 1)))
+      (assertion-violation 'bbtree-ref/index
+                           "Not a valid index into the bbtree"
+                           idx))
+    (index tree idx)))
 
 )
