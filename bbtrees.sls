@@ -35,6 +35,12 @@
 ;; key is already in the bbtree, its associated value is replaced with
 ;; the new value in the returned bbtree.
 ;;
+;; bbtree-update : bbtree any (any -> any) any -> bbtree
+;; returns a new bbtree with the value associated with the key updated
+;; according to the update procedure. If the key was not already in
+;; the bbtree, the update procedure is called on the default value,
+;; and the association is added to the bbtree.
+;;
 ;; bbtree-delete : bbtree any -> bbtree
 ;; returns a new bbtree with the key and its associated value
 ;; removed. If the key is not in the bbtree, the returned bbtree is a
@@ -121,6 +127,7 @@
         bbtree-size
         bbtree-ref
         bbtree-set
+        bbtree-update
         bbtree-delete
         bbtree-contains?
         bbtree-ordering-procedure
@@ -258,10 +265,10 @@
           [else
            (node* key value left right)])))
 
-(define (add tree key value <)
+(define (update tree key proc default <)
   (define (add-to tree)
     (if (empty? tree)
-        (make-node key value 1 (make-empty) (make-empty))
+        (make-node key (proc default) 1 (make-empty) (make-empty))
         (let ([k (node-key tree)]
               [v (node-value tree)]
               [l (node-left tree)]
@@ -271,8 +278,12 @@
                 [(< k key)
                  (T k v l (add-to r))]
                 [else
-                 (node* key value l r)]))))
+                 (node* key (proc v) l r)]))))
   (add-to tree))
+
+(define (add tree key value <)
+  (define (replace _) value)
+  (update tree key replace #f <))
 
 (define (delete tree key <)
   (define (delete-from tree)
@@ -539,6 +550,15 @@
                     key
                     value
                     (bbtree-ordering-procedure bbtree))))
+
+(define (bbtree-update bbtree key proc default)
+  (assert (bbtree? bbtree))
+  (update-tree bbtree
+               (update (bbtree-tree bbtree)
+                       key
+                       proc
+                       default
+                       (bbtree-ordering-procedure bbtree))))
 
 (define (bbtree-delete bbtree key)
   (assert (bbtree? bbtree))

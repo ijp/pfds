@@ -225,6 +225,14 @@
     (test-eqv 'c (bbtree-ref tree3 1))
     (test-exn assertion-violation? (bbtree-ref tree3 20))))
 
+(define-test-case bbtrees bbtree-update ()
+  (let ([bb (alist->bbtree '(("foo" . 10) ("bar" . 12)) string<?)]
+        [add1 (lambda (x) (+ x 1))])
+    (test-case bbtree-update ()
+      (test-eqv 11 (bbtree-update bb "foo" add1 0))
+      (test-eqv 13 (bbtree-update bb "bar" add1 0))
+      (test-eqv  1 (bbtree-update bb "baz" add1 0)))))
+
 (define-test-case bbtrees bbtree-delete ()
   (let* ([tree1 (bbtree-set (bbtree-set (bbtree-set (make-bbtree string<?) "a" 3)
                                         "b"
