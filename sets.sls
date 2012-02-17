@@ -103,6 +103,7 @@
         set-union
         set-intersection
         set-difference
+        set-ordering-procedure
         )
 (import (rnrs)
         (pfds bbtrees))
@@ -113,8 +114,13 @@
 (define-record-type (set %make-set set?)
   (fields tree))
 
+(define (set-ordering-procedure set)
+  (bbtree-ordering-procedure (set-tree set)))
+
 (define (make-set <)
   (%make-set (make-bbtree <)))
+
+;; provide a (make-equal-set) function?
 
 (define (set-member? set element)
   (bbtree-contains? (set-tree set) element))
@@ -159,6 +165,9 @@
 
 ;;; iterators
 (define (set-map proc set)
+  ;; currently restricted to returning a set with the same ordering, I
+  ;; could weaken this to, say, comparing with < on the object-hash,
+  ;; or I make it take a < argument for the result set.
   (let ((tree (set-tree set)))
     (%make-set
      (bbtree-fold (lambda (key _ tree)
