@@ -1,7 +1,7 @@
 #!r6rs
 ;;; queues.sls --- Purely functional queues
 
-;; Copyright (C) 2011 Ian Price <ianprice90@googlemail.com>
+;; Copyright (C) 2011,2012 Ian Price <ianprice90@googlemail.com>
 
 ;; Author: Ian Price <ianprice90@googlemail.com>
 
@@ -42,6 +42,16 @@
 ;; queue-empty-condition? : object -> boolean
 ;; tests if an object is a &queue-empty condition
 ;;
+;; queue->list : queue -> listof(any)
+;; returns a queue containing all the items in the list. The order of
+;; the elements in the queue is the same as the order of the elements
+;; in the list.
+;;
+;; list->queue : listof(any) -> queue
+;; returns a list containing all the items in the queue. The order of
+;; the items in the list is the same as the order in the queue.
+;; For any list l, (equal? (queue->list (list->queue l)) l) is #t.
+;;
 (library (pfds queues)
 (export make-queue
         queue?
@@ -50,6 +60,8 @@
         enqueue
         dequeue
         queue-empty-condition?
+        list->queue
+        queue->list
         )
 (import (except (rnrs) cons*)
         (pfds private lazy-lists)
@@ -105,7 +117,6 @@
         (%make-queue length l* '() l*))
       (%make-queue length l r (tail l^))))
 
-
 (define (queue-empty? queue)
   (zero? (queue-length queue)))
 
@@ -113,5 +124,16 @@
   &assertion
   make-queue-empty-condition
   queue-empty-condition?)
+
+(define (list->queue list)
+  (fold-left enqueue (make-queue) list))
+
+(define (queue->list queue)
+  (let loop ((rev-list '()) (queue queue))
+    (if (queue-empty? queue)
+        (reverse rev-list)
+        (let-values (((val queue) (dequeue queue)))
+          (loop (cons val rev-list)
+                 queue)))))
 
 )

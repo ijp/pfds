@@ -94,16 +94,9 @@
 
 (define-test-case queues queue-ordering ()
   (let* ((list '(bar quux foo zot baz))
-         (queue (foldl (lambda (val queue)
-                          (enqueue queue val))
-                        (make-queue)
-                        list)))
+         (queue (list->queue list)))
     (test-eqv 5 (queue-length queue))
-    (let loop ((queue queue) (list list))
-      (unless (null? list)
-        (let-values (((item queue) (dequeue queue)))
-          (test-eqv (car list) item)
-          (loop queue (cdr list)))))))
+    (test-equal list (queue->list queue))))
 
 
 (define-test-suite (deques pfds)
