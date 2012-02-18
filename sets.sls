@@ -82,6 +82,9 @@
 ;; set-difference : set set -> set
 ;; returns the difference of set1 and set2, i.e. the set of all items
 ;; in set1 that are not in set2.
+;;
+;; set-ordering-procedure : set -> (any any -> boolean)
+;; returns the ordering procedure used internall by the set.
 (library (pfds sets)
 (export set?
         make-set
