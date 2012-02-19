@@ -8,6 +8,7 @@ contains
 - deques
 - bbtrees
 - sets
+- dlists
 with more to come, time permitting.
 
 ** Installation
@@ -23,3 +24,9 @@ Functional Queues and Deques"]] by Chris Okasaki. The bbtrees and sets
 are based on the paper [[http://groups.csail.mit.edu/mac/users/adams/BB/92-10.ps]["Implementing Sets Efficiently in a Functional
 Language"]] by Stephen Adams.
 
+Dlists are a well known trick in the functional programming community,
+going back to at least [[http://www.cs.tufts.edu/~nr/cs257/archive/john-hughes/lists.pdf][“A Novel Representation of Lists and its
+application to the Function "Reverse"”]] by John Hughes in 1984,
+although he does not give them this name. The trick is likely even
+older than that (he points to a paper by Bird), though I have not the
+knowledge to confirm this.
