@@ -30,3 +30,6 @@ application to the Function "Reverse"”]] by John Hughes in 1984,
 although he does not give them this name. The trick is likely even
 older than that (he points to a paper by Bird), though I have not the
 knowledge to confirm this.
+
+** Thanks
+Thanks to [[Llewellyn Pritchard][https://github.com/leppie]] for testing this on [[https://ironscheme.codeplex.com/][IronScheme]].
