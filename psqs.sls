@@ -79,6 +79,18 @@
 ;; obtained by removing the minimum association from the original
 ;; queue. If the queue is empty, an assertion violation is raised.
 ;;
+;;;; Ranged query functions
+;;
+;; psq-at-most : psq priority -> ListOf(key . priority)
+;; returns an alist containing all the associations in the priority
+;; search queue with priority less than or equal to a given value. The
+;; alist returned is ordered by key according to the predicate for the
+;; psq.
+;;
+;; psq-at-most-range : psq priority key key -> ListOf(key . priority)
+;; Similar to psq-at-most, but it also takes an upper and lower bound,
+;; for the keys it will return. These bounds are inclusive.
+;;
 (library (pfds psqs)
 (export make-psq
         psq?
@@ -93,6 +105,9 @@
         psq-min
         psq-delete-min
         psq-pop
+        ;; ranged query operations
+        psq-at-most
+        psq-at-most-range
         )
 (import (except (rnrs) min))
 
@@ -274,6 +289,43 @@
   (values (winner-key tree)
           (delete-min tree key<? prio<?)))
 
+(define (at-most psq p key<? prio<?)
+  ;; TODO: dlist definition
+  (if (and (winner? psq)
+           (prio<? p (winner-priority psq)))
+      '()
+      (psq-case psq
+                (lambda () '())
+                (lambda (k p) (list (cons k p)))
+                (lambda (m1 m2)
+                  (append (at-most m1 p key<? prio<?)
+                          (at-most m2 p key<? prio<?)))
+                key<?)))
+
+                  ;; lower <= k <= upper is the same as
+                  ;; not( lower>k || k > upper)
+(define (at-most-range psq p lower upper key<? prio<?)
+  (define (within-range? key)
+    ;; lower <= k <= upper
+    (not (or (key<? key lower) (key<? upper key))))
+  (if (and (winner? psq)
+           (prio<? p (winner-priority psq)))
+      '()
+      (psq-case psq
+                (lambda () '())
+                (lambda (k p)
+                  (if (within-range? k)
+                      (list (cons k p))
+                      '()))
+                (lambda (m1 m2)
+                  (append (if (key<? (max-key m1) lower)
+                              '()
+                              (at-most-range m1 p lower upper key<? prio<?))
+                          (if (key<? upper (max-key m1))
+                              '()
+                              (at-most-range m2 p lower upper key<? prio<?))))
+                key<?)))
+
 ;;; Exported Type
 
 (define-record-type (psq %make-psq psq?)
@@ -332,5 +384,19 @@
   (assert (psq? psq))
   (let-values (((min rest) (pop (psq-tree psq) (psq-key<? psq) (psq-priority<? psq))))
     (values min (%update-psq psq rest))))
+
+(define (psq-at-most psq max-priority)
+  (assert (psq? psq))
+  (let ((tree   (psq-tree psq))
+        (key<?  (psq-key<? psq))
+        (prio<? (psq-priority<? psq)))
+    (at-most tree max-priority key<? prio<?)))
+
+(define (psq-at-most-range psq max-priority min-key max-key)
+  (assert (psq? psq))
+  (let ((tree   (psq-tree psq))
+        (key<?  (psq-key<? psq))
+        (prio<? (psq-priority<? psq)))
+    (at-most-range tree max-priority min-key max-key key<? prio<?)))
 
 )
