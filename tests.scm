@@ -557,4 +557,40 @@
           (test-eqv #\b min)
           (test-eqv #\a (psq-min rest)))))))
 
+(define-test-case psqs ranged-functions
+  (let* ((alist '((#\f . 24) (#\u . 42) (#\p . 16) (#\s . 34) (#\e . 17)
+                  (#\x . 45) (#\l . 14) (#\z . 5) (#\t . 45) (#\r . 41)
+                  (#\k . 32) (#\w . 14) (#\d . 12) (#\c . 16) (#\m . 20) (#\j . 25)))
+         (alist-sorted (list-sort (lambda (x y)
+                                    (char<? (car x) (car y)))
+                                  alist))
+         (psq  (alist->psq alist char<? <)))
+    (test-case ranged-functions ()
+      (test-equal alist-sorted
+                  (psq-at-most psq +inf.0))
+      (test-equal '() (psq-at-most psq 0))
+      (test-equal '((#\c . 16) (#\d . 12) (#\e . 17) (#\l . 14)
+                    (#\m . 20) (#\p . 16) (#\w . 14) (#\z . 5))
+                  (psq-at-most psq 20))
+      (test-equal alist-sorted
+                  (psq-at-most-range psq +inf.0 #\x00 #\xFF))
+      ;; with bounds outwith range in psq, is the same as psq-at-most
+      (test-equal '() (psq-at-most-range psq 0 #\x00 #\xFF))
+      (test-equal '((#\c . 16) (#\d . 12) (#\e . 17) (#\l . 14)
+                    (#\m . 20) (#\p . 16) (#\w . 14) (#\z . 5))
+                  (psq-at-most-range psq 20 #\x00 #\xFF))
+      (test-equal '((#\c . 16) (#\d . 12) (#\e . 17) (#\l . 14)
+                    (#\m . 20) (#\p . 16) (#\w . 14) (#\z . 5))
+                  (psq-at-most psq 20))
+      (test-equal (filter (lambda (x) (char<=? #\e (car x) #\u)) alist-sorted)
+                  (psq-at-most-range psq +inf.0 #\e #\u))
+      (test-equal '() (psq-at-most-range psq 0 #\e #\u))
+      (test-equal '((#\e . 17) (#\l . 14) (#\m . 20) (#\p . 16))
+                  (psq-at-most-range psq 20 #\e #\u))
+      ;; inclusiveness check
+      (test-equal '((#\t . 45))
+                  (psq-at-most-range psq 80 #\t #\t))
+      ;; if lower bound is higher than upper, then nothing
+      (test-equal '() (psq-at-most-range psq 80 #\t #\r)))))
+
 (run-test pfds)
