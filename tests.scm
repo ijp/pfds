@@ -15,7 +15,7 @@
         (pfds deques)
         (pfds bbtrees)
         (pfds sets)
-        (pfds priority-search-queues)
+        (pfds psqs)
         (wak trc-testing))
 
 (define (add1 x)
@@ -25,6 +25,12 @@
   (if (null? list)
       knil
       (foldl kons (kons (car list) knil) (cdr list))))
+
+(define (alist->psq alist key<? priority<?)
+  (foldl (lambda (kv psq)
+           (psq-set psq (car kv) (cdr kv)))
+         (make-psq key<? priority<?)
+         alist))
 
 (define-syntax test
   (syntax-rules ()
@@ -512,23 +518,23 @@
       )))
 
 (define-test-case psqs psq-update
-  (let ((empty (make-psq char<? <))
-        (psq1  (psq-update empty #\a add1 10))
-        (psq2  (psq-update psq1 #\b add1 33))
-        (psq3  (psq-update psq2 #\c add1 3))
-        (psq4  (psq-update psq3 #\a add1 0))
-        (psq5  (psq-update psq3 #\c add1 0)))
-
-    (psq-ref psq3 #\a 11)
-    (psq-ref psq3 #\b 34)
-    (psq-ref psq3 #\c 4)
-    
-    (psq-ref psq4 #\a 12)
-    (psq-ref psq4 #\b 34)
-    (psq-ref psq4 #\c 4)
-    
-    (psq-ref psq5 #\a 11)
-    (psq-ref psq5 #\b 34)
-    (psq-ref psq5 #\c 5)))
+  (let* ((empty (make-psq char<? <))
+         (psq1  (psq-update empty #\a add1 10))
+         (psq2  (psq-update psq1 #\b add1 33))
+         (psq3  (psq-update psq2 #\c add1 3))
+         (psq4  (psq-update psq3 #\a add1 0))
+         (psq5  (psq-update psq3 #\c add1 0)))
+    (test-case psq-update ()
+      (test-eqv 11 (psq-ref psq3 #\a))
+      (test-eqv 34 (psq-ref psq3 #\b))
+      (test-eqv 4  (psq-ref psq3 #\c))
+      
+      (test-eqv 12 (psq-ref psq4 #\a))
+      (test-eqv 34 (psq-ref psq4 #\b))
+      (test-eqv 4  (psq-ref psq4 #\c))
+      
+      (test-eqv 11 (psq-ref psq5 #\a))
+      (test-eqv 34 (psq-ref psq5 #\b))
+      (test-eqv 5  (psq-ref psq5 #\c)))))
 
 (run-test pfds)
