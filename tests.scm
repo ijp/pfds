@@ -537,4 +537,24 @@
       (test-eqv 34 (psq-ref psq5 #\b))
       (test-eqv 5  (psq-ref psq5 #\c)))))
 
+(define-test-case psqs priority-queue-functions
+  (let* ((psq1 (alist->psq '((#\a . 10) (#\b . 33) (#\c . 3) (#\d . 23) (#\e . 7))
+                           char<?
+                           <))
+         (psq2 (psq-delete-min psq1))
+         (psq3 (psq-delete-min (psq-set psq2 #\b 9)))
+         (psq4 (make-psq < <)))
+    (test-case priority-queue-functions ()
+      (test-eqv #\c (psq-min psq1))
+      (test-eqv #\e (psq-min psq2))
+      (test-exn assertion-violation? (psq-delete-min psq4))
+      (test-exn assertion-violation? (psq-delete-min psq4))
+      (test-eqv #\a (psq-min (psq-set psq1 #\a 0)))
+      (call-with-values
+          (lambda ()
+            (psq-pop psq3))
+        (lambda (min rest)
+          (test-eqv #\b min)
+          (test-eqv #\a (psq-min rest)))))))
+
 (run-test pfds)
