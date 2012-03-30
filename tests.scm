@@ -15,7 +15,11 @@
         (pfds deques)
         (pfds bbtrees)
         (pfds sets)
+        (pfds priority-search-queues)
         (wak trc-testing))
+
+(define (add1 x)
+  (+ x 1))
 
 (define (foldl kons knil list)
   (if (null? list)
@@ -457,5 +461,74 @@
   (test-eqv 0 (set-fold + 0 (list->set '() <)))
   (test-eqv 84 (set-fold + 0 (list->set '(3 12 62 7) <)))
   (test-eqv 499968 (set-fold * 1 (list->set '(3 12 62 7 8 4) <))))
+
+
+(define-test-suite (psqs pfds)
+  "Tests for the functional priority search tree implementation")
+
+(define-test-case psqs empty-psq ()
+  (test-predicate psq? (make-psq string<? <))
+  (test-predicate psq-empty? (make-psq string<? <)))
+
+(define-test-case psqs psq-set
+  (let* ((empty (make-psq char<? <))
+         (psq1  (psq-set empty #\a 10))
+         (psq2  (psq-set psq1 #\b 33))
+         (psq3  (psq-set psq2 #\c 3))
+         (psq4  (psq-set psq3 #\a 12)))
+    (test-case psq-set ()
+      (test-eqv 10 (psq-ref psq1 #\a))
+      (test-exn assertion-violation? (psq-ref psq1 #\b))
+      
+      (test-eqv 10 (psq-ref psq2 #\a))
+      (test-eqv 33 (psq-ref psq2 #\b))
+      (test-not (psq-contains? psq2 #\c))
+      
+      (test-eqv 10 (psq-ref psq3 #\a))
+      (test-eqv 33 (psq-ref psq3 #\b))
+      (test-eqv 3  (psq-ref psq3 #\c))
+
+      (test-eqv 12 (psq-ref psq4 #\a))
+      (test-eqv 33 (psq-ref psq4 #\b))
+      (test-eqv 3  (psq-ref psq4 #\c)))))
+
+(define-test-case psqs psq-delete
+  (let* ((psq1 (alist->psq '((#\a . 10) (#\b . 33) (#\c . 3))
+                           char<?
+                           <))
+         (psq2 (psq-delete psq1 #\c))
+         (psq3 (psq-delete psq2 #\b))
+         (psq4 (psq-delete psq3 #\a))
+         (psq5 (psq-delete psq1 #\d)))
+    (test-case psq-delete ()
+      (test-eqv #t (psq-contains? psq1 #\c))
+      (test-not (psq-contains? psq2 #\c))
+      (test-eqv #t (psq-contains? psq2 #\b))
+      (test-not (psq-contains? psq3 #\b))
+      (test-eqv #t (psq-contains? psq3 #\a))
+      (test-predicate psq-empty? psq4)
+      ;; (test-eqv (psq-size psq1)
+      ;;           (psq-size psq5))
+      )))
+
+(define-test-case psqs psq-update
+  (let ((empty (make-psq char<? <))
+        (psq1  (psq-update empty #\a add1 10))
+        (psq2  (psq-update psq1 #\b add1 33))
+        (psq3  (psq-update psq2 #\c add1 3))
+        (psq4  (psq-update psq3 #\a add1 0))
+        (psq5  (psq-update psq3 #\c add1 0)))
+
+    (psq-ref psq3 #\a 11)
+    (psq-ref psq3 #\b 34)
+    (psq-ref psq3 #\c 4)
+    
+    (psq-ref psq4 #\a 12)
+    (psq-ref psq4 #\b 34)
+    (psq-ref psq4 #\c 4)
+    
+    (psq-ref psq5 #\a 11)
+    (psq-ref psq5 #\b 34)
+    (psq-ref psq5 #\c 5)))
 
 (run-test pfds)
