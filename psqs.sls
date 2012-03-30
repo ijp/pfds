@@ -109,7 +109,8 @@
         psq-at-most
         psq-at-most-range
         )
-(import (except (rnrs) min))
+(import (except (rnrs) min)
+        (pfds dlists))
 
 ;;; record types
 
@@ -290,16 +291,15 @@
           (delete-min tree key<? prio<?)))
 
 (define (at-most psq p key<? prio<?)
-  ;; TODO: dlist definition
   (if (and (winner? psq)
            (prio<? p (winner-priority psq)))
-      '()
+      (dlist)
       (psq-case psq
-                (lambda () '())
-                (lambda (k p) (list (cons k p)))
+                (lambda () (dlist))
+                (lambda (k p) (dlist (cons k p)))
                 (lambda (m1 m2)
-                  (append (at-most m1 p key<? prio<?)
-                          (at-most m2 p key<? prio<?)))
+                  (dlist-append (at-most m1 p key<? prio<?)
+                                (at-most m2 p key<? prio<?)))
                 key<?)))
 
                   ;; lower <= k <= upper is the same as
@@ -310,20 +310,20 @@
     (not (or (key<? key lower) (key<? upper key))))
   (if (and (winner? psq)
            (prio<? p (winner-priority psq)))
-      '()
+      (dlist)
       (psq-case psq
-                (lambda () '())
+                (lambda () (dlist))
                 (lambda (k p)
                   (if (within-range? k)
-                      (list (cons k p))
-                      '()))
+                      (dlist (cons k p))
+                      (dlist)))
                 (lambda (m1 m2)
-                  (append (if (key<? (max-key m1) lower)
-                              '()
-                              (at-most-range m1 p lower upper key<? prio<?))
-                          (if (key<? upper (max-key m1))
-                              '()
-                              (at-most-range m2 p lower upper key<? prio<?))))
+                  (dlist-append (if (key<? (max-key m1) lower)
+                                    (dlist)
+                                    (at-most-range m1 p lower upper key<? prio<?))
+                                (if (key<? upper (max-key m1))
+                                    (dlist)
+                                    (at-most-range m2 p lower upper key<? prio<?))))
                 key<?)))
 
 ;;; Exported Type
@@ -390,13 +390,13 @@
   (let ((tree   (psq-tree psq))
         (key<?  (psq-key<? psq))
         (prio<? (psq-priority<? psq)))
-    (at-most tree max-priority key<? prio<?)))
+    (dlist->list (at-most tree max-priority key<? prio<?))))
 
 (define (psq-at-most-range psq max-priority min-key max-key)
   (assert (psq? psq))
   (let ((tree   (psq-tree psq))
         (key<?  (psq-key<? psq))
         (prio<? (psq-priority<? psq)))
-    (at-most-range tree max-priority min-key max-key key<? prio<?)))
+    (dlist->list (at-most-range tree max-priority min-key max-key key<? prio<?))))
 
 )
