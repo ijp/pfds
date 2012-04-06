@@ -120,8 +120,16 @@
 
 (define-record-type start)
 
-(define-record-type loser
-  (fields key priority left split-key right))
+(define-record-type (loser %make-loser loser?)
+  (fields size key priority left split-key right))
+
+(define (make-loser key priority left split-key right)
+  (%make-loser (+ (size left) (size right) 1)
+               key
+               priority
+               left
+               split-key
+               right))
 
 ;;; functions
 (define (maximum-key psq)
@@ -134,7 +142,7 @@
 (define (singleton key priority)
   (make-winner key priority (make-start) key))
 
-(define (play-match psq1 psq2 prio<?)
+(define (play-match psq1 psq2 key<? prio<?)
   (cond ((void? psq1) psq2)
         ((void? psq2) psq1)
         ((not (prio<? (winner-priority psq2)
@@ -149,7 +157,7 @@
                (m2 (winner-maximum-key psq2)))
            (make-winner k1
                         p1
-                        (make-loser k2 p2 t1 m1 t2)
+                        (balance k2 p2 t1 m1 t2 key<? prio<?)
                         m2)))
         (else
          (let ((k1 (winner-key psq1))
@@ -162,7 +170,7 @@
                (m2 (winner-maximum-key psq2)))
            (make-winner k2
                         p2
-                        (make-loser k1 p1 t1 m1 t2)
+                        (balance k1 p1 t1 m1 t2 key<? prio<?)
                         m2)))))
 
 (define (second-best ltree key key<? prio<?)
@@ -176,9 +184,11 @@
         (if (not (key<? m k))
             (play-match (make-winner k p l m)
                         (second-best r key key<? prio<?)
+                        key<?
                         prio<?)
             (play-match (second-best l m key<? prio<?)
                         (make-winner k p r key)
+                        key<?
                         prio<?)))))
 
 (define (delete-min psq key<? prio<?)
@@ -225,10 +235,12 @@
               (cond ((key<? key k)
                      (play-match (singleton key (f default))
                                  (singleton k p)
+                                 key<?
                                  prio<?))
                     ((key<? k key)
                      (play-match (singleton k p)
                                  (singleton key (f default))
+                                 key<?
                                  prio<?))
                     (else
                      (singleton key (f p)))))
@@ -236,9 +248,11 @@
               (if (not (key<? (max-key w1) key))
                   (play-match (update w1 key f default key<? prio<?)
                               w2
+                              key<?
                               prio<?)
                   (play-match w1
                               (update w2 key f default key<? prio<?)
+                              key<?
                               prio<?)))
             key<?))
 
@@ -249,17 +263,19 @@
               (cond ((key<? key k)
                      (play-match (singleton key val)
                                  (singleton k p)
+                                 key<?
                                  prio<?))
                     ((key<? k key)
                      (play-match (singleton k p)
                                  (singleton key val)
+                                 key<?
                                  prio<?))
                     (else
                      (singleton key val))))
             (lambda (w1 w2)
               (if (not (key<? (max-key w1) key))
-                  (play-match (insert w1 key val key<? prio<?) w2 prio<?)
-                  (play-match w1 (insert w2 key val key<? prio<?) prio<?)))
+                  (play-match (insert w1 key val key<? prio<?) w2 key<? prio<?)
+                  (play-match w1 (insert w2 key val key<? prio<?) key<? prio<?)))
             key<?))
 
 (define (delete psq key key<? prio<?)
@@ -272,8 +288,8 @@
                   empty))
             (lambda (w1 w2)
               (if (not (key<? (max-key w1) key))
-                  (play-match (delete w1 key key<? prio<?) w2 prio<?)
-                  (play-match w1 (delete w2 key key<? prio<?) prio<?)))
+                  (play-match (delete w1 key key<? prio<?) w2 key<? prio<?)
+                  (play-match w1 (delete w2 key key<? prio<?) key<? prio<?)))
             key<?))
 
 (define (min tree)
@@ -325,6 +341,118 @@
                               '()
                               (at-most-range m2 p lower upper key<? prio<?))))
                 key<?)))
+
+;;; Maintaining balance
+(define weight 4) ; balancing constant
+
+(define (size ltree)
+  (if (start? ltree)
+      0
+      (loser-size ltree)))
+
+(define (balance key priority left split-key right key<? prio<?)
+  (let ((l-size (size left))
+        (r-size (size right)))
+    (cond ((< (+ l-size r-size) 2)
+           (make-loser key priority left split-key right))
+          ((> r-size (* weight l-size))
+           (balance-left key priority left split-key right key<? prio<?))
+          ((> l-size (* weight r-size))
+           (balance-right key priority left split-key right key<? prio<?))
+          (else
+           (make-loser key priority left split-key right)))))
+
+(define (balance-left key priority left split-key right key<? prio<?)
+  (if (< (size (loser-left right))
+         (size (loser-right right)))
+      (single-left key priority left split-key right key<? prio<?)
+      (double-left key priority left split-key right key<? prio<?)))
+
+(define (balance-right key priority left split-key right key<? prio<?)
+  (if (< (size (loser-right left))
+         (size (loser-left left)))
+      (single-right key priority left split-key right key<? prio<?)
+      (double-right key priority left split-key right key<? prio<?)))
+
+(define (single-left key priority left split-key right key<? prio<?)
+  (let ((right-key (loser-key right))
+        (right-priority (loser-priority right))
+        (right-left (loser-left right))
+        (right-split-key (loser-split-key right))
+        (right-right (loser-right right)))
+    ;; test
+    (if (and (not (key<? right-split-key right-key))
+             (not (prio<? right-priority priority)))
+        (make-loser key
+                    priority
+                    (make-loser right-key right-priority left split-key right-left)
+                    right-split-key
+                    right-right
+                    )
+        (make-loser right-key
+                    right-priority
+                    (make-loser key priority left split-key right-left)
+                    right-split-key
+                    right-right))))
+
+(define (double-left key priority left split-key right key<? prio<?)
+  (let ((right-key (loser-key right))
+        (right-priority (loser-priority right))
+        (right-left (loser-left right))
+        (right-split-key (loser-split-key right))
+        (right-right (loser-right right)))
+    (single-left key
+                 priority
+                 left
+                 split-key
+                 (single-right right-key
+                               right-priority
+                               right-left
+                               right-split-key
+                               right-right
+                               key<?
+                               prio<?)
+                 key<?
+                 prio<?)))
+
+(define (single-right key priority left split-key right key<? prio<?)
+  (let ((left-key (loser-key left))
+        (left-priority (loser-priority left))
+        (left-left (loser-left left))
+        (left-split-key (loser-split-key left))
+        (left-right (loser-right left)))
+    (if (and (key<? left-split-key left-key)
+             (not (prio<? left-priority priority)))
+        (make-loser key
+                    priority
+                    left-left
+                    left-split-key
+                    (make-loser left-key left-priority left-right split-key right))
+        (make-loser left-key
+                    left-priority
+                    left-left
+                    left-split-key
+                    (make-loser key priority left-right split-key right)))))
+
+(define (double-right key priority left split-key right key<? prio<?)
+  (let ((left-key (loser-key left))
+        (left-priority (loser-priority left))
+        (left-left (loser-left left))
+        (left-split-key (loser-split-key left))
+        (left-right (loser-right left)))
+    (single-right key
+                  priority
+                  (single-left left-key
+                               left-priority
+                               left-left
+                               left-split-key
+                               left-right
+                               key<?
+                               prio<?)
+                  split-key
+                  right
+                  key<?
+                  prio<?)))
 
 ;;; Exported Type
 
