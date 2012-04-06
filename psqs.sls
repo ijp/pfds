@@ -34,6 +34,9 @@
 ;; returns #t if the priority search queue contains no elements, #f
 ;; otherwise.
 ;;
+;; psq-size : psq -> non-negative integer
+;; returns the number of associations in the priority search queue
+;;
 ;;;; Finite map operations
 ;;
 ;; psq-ref : psq key -> priority
@@ -95,6 +98,7 @@
 (export make-psq
         psq?
         psq-empty?
+        psq-size
         ;; map operations
         psq-ref
         psq-set
@@ -526,5 +530,12 @@
         (key<?  (psq-key<? psq))
         (prio<? (psq-priority<? psq)))
     (at-most-range tree max-priority min-key max-key key<? prio<?)))
+
+(define (psq-size psq)
+  (assert (psq? psq))
+  (let ((tree (psq-tree psq)))
+    (if (winner? tree)
+        (+ 1 (size (winner-loser-tree tree)))
+        0)))
 
 )

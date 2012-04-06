@@ -474,7 +474,8 @@
 
 (define-test-case psqs empty-psq ()
   (test-predicate psq? (make-psq string<? <))
-  (test-predicate psq-empty? (make-psq string<? <)))
+  (test-predicate psq-empty? (make-psq string<? <))
+  (test-predicate zero? (psq-size (make-psq string<? <))))
 
 (define-test-case psqs psq-set
   (let* ((empty (make-psq char<? <))
@@ -485,18 +486,22 @@
     (test-case psq-set ()
       (test-eqv 10 (psq-ref psq1 #\a))
       (test-exn assertion-violation? (psq-ref psq1 #\b))
+      (test-eqv 1 (psq-size psq1))
       
       (test-eqv 10 (psq-ref psq2 #\a))
       (test-eqv 33 (psq-ref psq2 #\b))
       (test-not (psq-contains? psq2 #\c))
+      (test-eqv 2 (psq-size psq2))
       
       (test-eqv 10 (psq-ref psq3 #\a))
       (test-eqv 33 (psq-ref psq3 #\b))
       (test-eqv 3  (psq-ref psq3 #\c))
+      (test-eqv 3 (psq-size psq3))
 
       (test-eqv 12 (psq-ref psq4 #\a))
       (test-eqv 33 (psq-ref psq4 #\b))
-      (test-eqv 3  (psq-ref psq4 #\c)))))
+      (test-eqv 3  (psq-ref psq4 #\c))
+      (test-eqv 3 (psq-size psq4)))))
 
 (define-test-case psqs psq-delete
   (let* ((psq1 (alist->psq '((#\a . 10) (#\b . 33) (#\c . 3))
@@ -513,9 +518,8 @@
       (test-not (psq-contains? psq3 #\b))
       (test-eqv #t (psq-contains? psq3 #\a))
       (test-predicate psq-empty? psq4)
-      ;; (test-eqv (psq-size psq1)
-      ;;           (psq-size psq5))
-      )))
+      (test-eqv (psq-size psq1)
+                (psq-size psq5)))))
 
 (define-test-case psqs psq-update
   (let* ((empty (make-psq char<? <))
@@ -532,10 +536,12 @@
       (test-eqv 12 (psq-ref psq4 #\a))
       (test-eqv 34 (psq-ref psq4 #\b))
       (test-eqv 4  (psq-ref psq4 #\c))
+      (test-eqv 3  (psq-size psq4))
       
       (test-eqv 11 (psq-ref psq5 #\a))
       (test-eqv 34 (psq-ref psq5 #\b))
-      (test-eqv 5  (psq-ref psq5 #\c)))))
+      (test-eqv 5  (psq-ref psq5 #\c))
+      (test-eqv 3  (psq-size psq5)))))
 
 (define-test-case psqs priority-queue-functions
   (let* ((psq1 (alist->psq '((#\a . 10) (#\b . 33) (#\c . 3) (#\d . 23) (#\e . 7))
