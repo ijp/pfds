@@ -309,42 +309,44 @@
   (values (winner-key tree)
           (delete-min tree key<? prio<?)))
 
+;; at-most and at-most-range are perfect examples of when to use
+;; dlists, but we do not do that here
 (define (at-most psq p key<? prio<?)
-  ;; TODO: dlist definition
-  (if (and (winner? psq)
-           (prio<? p (winner-priority psq)))
-      '()
-      (psq-case psq
-                (lambda () '())
-                (lambda (k p) (list (cons k p)))
-                (lambda (m1 m2)
-                  (append (at-most m1 p key<? prio<?)
-                          (at-most m2 p key<? prio<?)))
-                key<?)))
+  (define (at-most psq accum)
+    (if (and (winner? psq)
+             (prio<? p (winner-priority psq)))
+        accum
+        (psq-case psq
+                  (lambda () accum)
+                  (lambda (k p) (cons (cons k p) accum))
+                  (lambda (m1 m2)
+                    (at-most m1 (at-most m2 accum)))
+                  key<?)))
+  (at-most psq '()))
 
-                  ;; lower <= k <= upper is the same as
-                  ;; not( lower>k || k > upper)
 (define (at-most-range psq p lower upper key<? prio<?)
   (define (within-range? key)
     ;; lower <= k <= upper
     (not (or (key<? key lower) (key<? upper key))))
-  (if (and (winner? psq)
-           (prio<? p (winner-priority psq)))
-      '()
-      (psq-case psq
-                (lambda () '())
-                (lambda (k p)
-                  (if (within-range? k)
-                      (list (cons k p))
-                      '()))
-                (lambda (m1 m2)
-                  (append (if (key<? (max-key m1) lower)
-                              '()
-                              (at-most-range m1 p lower upper key<? prio<?))
-                          (if (key<? upper (max-key m1))
-                              '()
-                              (at-most-range m2 p lower upper key<? prio<?))))
-                key<?)))
+  (define (at-most psq accum)
+    (if (and (winner? psq)
+             (prio<? p (winner-priority psq)))
+        accum
+        (psq-case psq
+                  (lambda () accum)
+                  (lambda (k p)
+                    (if (within-range? k)
+                        (cons (cons k p) accum)
+                        accum))
+                  (lambda (m1 m2)
+                    (let ((accum* (if (key<? upper (max-key m1))
+                                      accum
+                                      (at-most m2 accum))))
+                      (if (key<? (max-key m1) lower)
+                          accum*
+                          (at-most m1 accum*))))
+                  key<?)))
+  (at-most psq '()))
 
 ;;; Maintaining balance
 (define weight 4) ; balancing constant
