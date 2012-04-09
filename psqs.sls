@@ -511,7 +511,8 @@
   (min (psq-tree psq)))
 
 (define (psq-delete-min psq)
-  (assert (psq? psq))
+  (assert (and (psq? psq)
+               (not (psq-empty? psq))))
   (%update-psq psq (delete-min (psq-tree psq) (psq-key<? psq) (psq-priority<? psq))))
 
 (define (psq-pop psq)
