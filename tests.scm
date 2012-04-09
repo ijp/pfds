@@ -554,7 +554,6 @@
       (test-eqv #\c (psq-min psq1))
       (test-eqv #\e (psq-min psq2))
       (test-exn assertion-violation? (psq-delete-min psq4))
-      (test-exn assertion-violation? (psq-delete-min psq4))
       (test-eqv #\a (psq-min (psq-set psq1 #\a 0)))
       (call-with-values
           (lambda ()
