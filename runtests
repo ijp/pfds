@@ -1,0 +1,16 @@
+#!/bin/sh
+
+function run_guile {
+    guile -x .sls -x .guile.sls -x .ss tests.scm
+}
+
+function run_racket {
+    racket tests.scm
+}
+
+case "$1" in
+    guile) run_guile ;;
+    racket) run_racket ;;
+    all) run_guile; run_racket ;;
+    *) run_guile ;;
+esac
