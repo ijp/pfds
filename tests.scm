@@ -16,6 +16,7 @@
         (pfds bbtrees)
         (pfds sets)
         (pfds psqs)
+        (pfds fingertrees)
         (wak trc-testing))
 
 (define (add1 x)
@@ -597,5 +598,61 @@
                   (psq-at-most-range psq 80 #\t #\t))
       ;; if lower bound is higher than upper, then nothing
       (test-equal '() (psq-at-most-range psq 80 #\t #\r)))))
+
+(define-test-suite (fingertrees pfds)
+  "Tests for the fingertree implementation")
+
+(define-test-case fingertrees empty-tree ()
+  (test-predicate fingertree? (make-fingertree))
+  (test-predicate fingertree-empty? (make-fingertree)))
+
+(define-test-case fingertrees construction
+  (let ((l1 '(a b c d e f))
+        (l2 '((#t . f) (#t . e) (#t . d) (#t . c) (#t . b) (#t . a)))
+        (l3 '((#f . a) (#f . b) (#f . c) (#f . d) (#f . e) (#f . f)))
+        (l4 '((#f . b) (#f . c) (#t . a) (#f . d) (#f . e) (#f . f)))
+        (l5 '((#f . e) (#t . d) (#t . c) (#t . b) (#f . f) (#t . a)))
+        (make (lambda (alist)
+                (fold-left (lambda (tree pair)
+                             (if (car pair)
+                                 (fingertree-cons (cdr pair) tree)
+                                 (fingertree-snoc tree (cdr pair))))
+                           (make-fingertree)
+                           alist)))
+        (empty (make-fingertree)))
+    (test-case construction ()
+      (test-eqv #f (fingertree-empty? (fingertree-cons #f empty)))
+      (test-eqv #f (fingertree-empty? (fingertree-snoc empty #f)))
+      (test-equal l1 (fingertree->list (make l2)))
+      (test-equal l1 (fingertree->list (make l3)))
+      (test-equal l1 (fingertree->list (make l4)))
+      (test-equal l1 (fingertree->list (make l5))))))
+
+(define-test-case fingertrees conversion
+  (let ((l1 '(31 238 100 129 6 169 239 150 96 141 207 208 190 45 56
+              183 199 254 78 210 14 131 10 220 205 203 125 111 42 249))
+        (l2 '(25 168 21 246 39 211 60 83 103 161 192 201 31 253
+              156 218 204 186 155 117)))
+    (test-case conversion ()
+      (equal? '() (fingertree->list (list->fingertree '())))
+      (equal? l1 (fingertree->list (list->fingertree l1)))
+      (equal? l2 (fingertree->list (list->fingertree l2))))))
+
+(define-test-case fingertrees ftree-append
+  (let ((l1 '(31 238 100 129 6 169 239 150 96 141 207 208 190 45 56
+              183 199 254 78 210 14 131 10 220 205 203 125 111 42 249))
+        (l2 '(25 168 21 246 39 211 60 83 103 161 192 201 31 253
+              156 218 204 186 155 117))
+        (append* (lambda (a b)
+                   (fingertree->list
+                    (fingertree-append
+                     (list->fingertree a)
+                     (list->fingertree b))))))
+    (test-case ftree-append ()
+      (equal? (append l1 '()) (append* l1 '()))
+      (equal? (append '() l1) (append* '() l1))
+      (equal? (append l1 l2) (append* l1 l2))
+      (equal? (append l1 l1) (append* l1 l1))
+      (equal? (append l1 l2) (append* l1 l2)))))
 
 (run-test pfds)
