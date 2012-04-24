@@ -12,6 +12,10 @@
         list->sequence
         sequence->list
         sequence
+        sequence-split-at
+        sequence-take
+        sequence-drop
+        sequence-ref
         )
 
 (import (rnrs)
@@ -66,5 +70,31 @@
 
 (define (sequence . args)
   (list->sequence args))
+
+(define (sequence-split-at seq i)
+  (let-values (((l r)
+                (fingertree-split (lambda (x) (< i x))
+                                  (sequence-fingertree seq))))
+    (values (%make-sequence l)
+            (%make-sequence r))))
+
+(define (sequence-take seq i)
+  (let-values (((head tail)
+                (sequence-split-at seq i)))
+    head))
+
+(define (sequence-drop seq i)
+  (let-values (((head tail)
+                (sequence-split-at seq i)))
+    tail))
+
+(define (sequence-ref seq i)
+  (define size (sequence-size seq))
+  (unless (<= 0 i size)
+    (assertion-violation 'sequence-ref "Index out of range" i))
+  (let-values (((_l x _r)
+                (fingertree-split3 (lambda (x) (< i x))
+                                   (sequence-fingertree seq))))
+    x))
 
 )
