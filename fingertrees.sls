@@ -13,6 +13,7 @@
         fingertree->list
         fingertree-measure
         fingertree-split
+        fingertree-split3
         )
 (import (rnrs))
 
@@ -423,4 +424,17 @@
     (lambda (a b)
       (values (%wrap fingertree a)
               (%wrap fingertree b)))))
+
+(define (fingertree-split3 p fingertree)
+  (call-with-values
+      (lambda ()
+        (define monoid (fingertree-monoid fingertree))
+        (split-tree p
+                    (mempty monoid)
+                    (fingertree-tree fingertree)
+                    monoid))
+    (lambda (a b c)
+      (values (%wrap fingertree a)
+              b
+              (%wrap fingertree c)))))
 )
