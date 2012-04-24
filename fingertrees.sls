@@ -44,8 +44,8 @@
    (lambda (new)
      (lambda (monoid a b)
        (define app (mappend monoid))
-       (new (app (measure a monoid)
-                 (measure b monoid))
+       (new (app (measure-nodetree a monoid)
+                 (measure-nodetree b monoid))
             a
             b))))
   (fields measure a b))
@@ -55,9 +55,9 @@
    (lambda (new)
      (lambda (monoid a b c)
        (define app (mappend monoid))
-       (new (app (app (measure a monoid)
-                      (measure b monoid))
-                 (measure c monoid))
+       (new (app (app (measure-nodetree a monoid)
+                      (measure-nodetree b monoid))
+                 (measure-nodetree c monoid))
             a
             b
             c))))
@@ -90,12 +90,13 @@
    (lambda (new)
      (lambda (monoid left middle right)
        (define app (mappend monoid))
-       (new (app (app (measure left monoid)
-                      (measure middle monoid))
-                 (measure right monoid))
+       (new (app (app (measure-digit left monoid)
+                      (measure-ftree middle monoid))
+                 (measure-digit right monoid))
             left
             middle
-            right))))
+            right)
+       )))
   ;; left and right expected to be lists of length 0 < l < 5
   (fields measure left middle right))
 
@@ -269,23 +270,24 @@
           (immutable append mappend)
           (immutable convert mconvert)))
 
-(define (measure obj monoid)
+(define (measure-digit obj monoid)
+  (fold-left (lambda (i a)
+               ((mappend monoid) i (measure-nodetree a monoid)))
+             (mempty monoid)
+             obj))
+
+(define (measure-ftree obj monoid)
+  (cond ((empty? obj)
+         (mempty monoid))
+        ((single? obj)
+         (measure-nodetree (single-value obj) monoid))
+        (else
+         (rib-measure obj))))
+
+(define (measure-nodetree obj monoid)
   (cond ((node2? obj) (node2-measure obj))
         ((node3? obj) (node3-measure obj))
-        ((empty? obj) (mempty monoid))
-        ((single? obj) (measure (single-value obj) monoid))
-        ((rib? obj) (rib-measure obj))
-        ;; digits currently represented by lists
-        ;; not a good idea, since it may interfere with lists in the sequence
-        ((list? obj)
-         (fold-left (lambda (i a)
-                      ((mappend monoid) i (measure a monoid)))
-                    (mempty monoid)
-                    obj))
-        (else
-         ((mconvert monoid) obj)
-         ;;(error 'measure "measure not supported for this type")
-         )))
+        (else ((mconvert monoid) obj))))
 
 ;; exported interface
 
@@ -358,7 +360,7 @@
           (cons a (fingertree->list t*))))))
 
 (define (fingertree-measure fingertree)
-  (measure (fingertree-tree fingertree)
-           (fingertree-monoid fingertree)))
+  (measure-ftree (fingertree-tree fingertree)
+                 (fingertree-monoid fingertree)))
 
 )
