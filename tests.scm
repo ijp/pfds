@@ -665,4 +665,17 @@
       (equal? (append l1 l1) (append* l1 l1))
       (equal? (append l1 l2) (append* l1 l2)))))
 
+(define-test-case fingertrees monoidal-operation
+  (let ((l1 '(31 238 100 129 6 169 239 150 96 141
+              207 208 190 45 56 183 199 254 78 210))
+        (l2 '((31 238 100 129 6) (169 239 150) (96 141 207 208 190)
+              ()  (45 56 183 199) (254 78 210)))
+        (car/default (lambda (dflt) (lambda (x) (if (pair? x) (car x) dflt)))))
+    (test-case moniodal-operation ()
+      (test-equal 254 (fingertree-measure (%list->fingertree l1 0 max values)))
+      (test-equal 6 (fingertree-measure (%list->fingertree l1 1000 min values)))
+      (test-equal l1 (fingertree-measure (%list->fingertree l2 '() append values)))
+      (test-equal 595 (fingertree-measure
+                       (%list->fingertree l2 0 + (car/default 0)))))))
+
 (run-test pfds)
