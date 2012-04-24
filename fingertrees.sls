@@ -12,6 +12,7 @@
         list->fingertree
         fingertree->list
         fingertree-measure
+        fingertree-split
         )
 (import (rnrs))
 
@@ -289,6 +290,55 @@
         ((node3? obj) (node3-measure obj))
         (else ((mconvert monoid) obj))))
 
+(define (split proc tree monoid)
+  (if (empty? tree)
+      (values (make-empty) (make-empty))
+      (if (proc (measure-ftree tree monoid))
+          (let-values (((l x r) (split-tree proc (mempty monoid) tree monoid)))
+            (values l (insert-front r x monoid)))
+          (values tree (make-empty)))))
+
+(define (split-tree proc i tree monoid)
+  (ftree-case tree
+    (lambda ()
+      (error 'split-tree "shouldn't happen?"))
+    (lambda (a)
+      (values (make-empty) a (make-empty)))
+    (lambda (l m r)
+      (define app (mappend monoid))
+      (define vpr (app i (measure-digit l monoid)))
+      (define vm  (app vpr (measure-ftree m monoid)))
+      (cond ((proc vpr)
+             (let-values (((l* x* r*) (split-digit proc i l monoid)))
+               (values (list->tree l* monoid)
+                       x*
+                       (rib-l r* m r monoid))))
+            ((proc vm)
+             (let*-values (((ml xs mr) (split-tree proc vpr m monoid))
+                           ((l* x* r*)
+                            (split-digit proc
+                                         (app vpr (measure-ftree ml monoid))
+                                         (node->list xs)
+                                         monoid)))
+               (values (rib-r l ml l* monoid)
+                       x*
+                       (rib-l r* mr r monoid))))
+            (else
+             (let-values (((l* x* r*) (split-digit proc vm r monoid)))
+               (values (rib-r l m l* monoid)
+                       x*
+                       (list->tree r* monoid))))))))
+
+(define (split-digit proc i xs monoid)
+  (if (null? (cdr xs))
+      (values '() (car xs) '())
+      (let ((i* ((mappend monoid) i (measure-nodetree (car xs) monoid))))
+        (if (proc i*)
+            (values '() (car xs) (cdr xs))
+            (let-values (((l x r)
+                          (split-digit proc i* (cdr xs) monoid)))
+              (values (cons (car xs) l) x r))))))
+
 ;; exported interface
 
 (define-record-type (fingertree %make-fingertree fingertree?)
@@ -363,4 +413,14 @@
   (measure-ftree (fingertree-tree fingertree)
                  (fingertree-monoid fingertree)))
 
+
+(define (fingertree-split p fingertree)
+  (call-with-values
+      (lambda ()
+        (split p
+               (fingertree-tree fingertree)
+               (fingertree-monoid fingertree)))
+    (lambda (a b)
+      (values (%wrap fingertree a)
+              (%wrap fingertree b)))))
 )
