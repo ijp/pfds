@@ -16,7 +16,9 @@
         (pfds bbtrees)
         (pfds sets)
         (pfds psqs)
-        (pfds fingertrees)
+        (rename (pfds fingertrees)
+                (make-fingertree %make-fingertree)
+                (list->fingertree %list->fingertree))
         (wak trc-testing))
 
 (define (add1 x)
@@ -32,6 +34,14 @@
            (psq-set psq (car kv) (cdr kv)))
          (make-psq key<? priority<?)
          alist))
+
+;; Right now, I am not testing the monoidal parts of fingertrees, so
+;; we use constructor that replaces these with arbitrary values
+(define (make-fingertree)
+  (%make-fingertree 0 (lambda (x y) x) (lambda (x) x)))
+
+(define (list->fingertree l)
+  (%list->fingertree l 0 (lambda (x y) x) (lambda (x) x)))
 
 (define-syntax test
   (syntax-rules ()
