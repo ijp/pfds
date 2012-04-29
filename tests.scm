@@ -692,4 +692,21 @@
                                                            (list->sum-tree l1))))
                        (fingertree->list (fingertree-append a b)))))))
 
+(define-test-case fingertrees fingertree-folds
+  (let* ((l '(31 238 100 129 6 169 239 150 96 141
+                 207 208 190 45 56 183 199 254 78 210))
+         (lrev (reverse l))
+         (total (apply + l))
+         (ft (list->fingertree l)))
+    (test-case fingertree-folds ()
+      ;; empty case
+      (test-eqv #t (fingertree-fold (lambda _ #f) #t (make-fingertree)))
+      (test-eqv #t (fingertree-fold-right (lambda _ #f) #t (make-fingertree)))
+      ;; associative operations
+      (test-eqv total (fingertree-fold + 0 ft))
+      (test-eqv total (fingertree-fold-right + 0 ft))
+      ;; non-associative operations
+      (test-equal lrev (fingertree-fold cons '() ft))
+      (test-equal l (fingertree-fold-right cons '() ft)))))
+
 (run-test pfds)
