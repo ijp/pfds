@@ -655,9 +655,9 @@
         (l2 '(25 168 21 246 39 211 60 83 103 161 192 201 31 253
               156 218 204 186 155 117)))
     (test-case conversion ()
-      (equal? '() (fingertree->list (list->fingertree '())))
-      (equal? l1 (fingertree->list (list->fingertree l1)))
-      (equal? l2 (fingertree->list (list->fingertree l2))))))
+      (test-equal '() (fingertree->list (list->fingertree '())))
+      (test-equal l1 (fingertree->list (list->fingertree l1)))
+      (test-equal l2 (fingertree->list (list->fingertree l2))))))
 
 (define-test-case fingertrees ftree-append
   (let ((l1 '(31 238 100 129 6 169 239 150 96 141 207 208 190 45 56
