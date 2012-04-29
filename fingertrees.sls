@@ -14,6 +14,8 @@
         fingertree-measure
         fingertree-split
         fingertree-split3
+        fingertree-fold
+        fingertree-fold-right
         )
 (import (rnrs))
 
@@ -80,6 +82,30 @@
 (define (node->list node)
   (node-fold-right cons '() node))
 
+(define (nodetree-fold-right f base nodetree)
+  (define (foldr node base)
+    (cond ((node2? node)
+           (foldr (node2-a node)
+                  (foldr (node2-b node) base)))
+          ((node3? node)
+           (foldr (node3-a node)
+                  (foldr (node3-b node)
+                         (foldr (node3-c node) base))))
+          (else (f node base))))
+  (foldr nodetree base))
+
+(define (nodetree-fold-left f base nodetree)
+  (define (foldl node base)
+    (cond ((node2? node)
+           (foldl (node2-b node)
+                  (foldl (node2-a node) base)))
+          ((node3? node)
+           (foldl (node3-c node)
+                  (foldl (node3-b node)
+                         (foldl (node3-a node) base))))
+          (else (f node base))))
+  (foldl nodetree base))
+
 ;;; Tree type
 
 (define-record-type empty)
@@ -110,6 +136,36 @@
          (rib-k (rib-left ftree)
                 (rib-middle ftree)
                 (rib-right ftree)))))
+
+(define (digits-fold-right f b d)
+  (fold-right (lambda (ntree base)
+                (nodetree-fold-right f base ntree))
+              b
+              d))
+
+(define (digits-fold-left f b d)
+  (fold-left (lambda (base ntree)
+                (nodetree-fold-left f base ntree))
+              b
+              d))
+
+(define (ftree-fold-right proc base ftree)
+  (ftree-case ftree
+    (lambda () base)
+    (lambda (x) (nodetree-fold-right proc base x))
+    (lambda (l x r)
+      (define base* (digits-fold-right proc base r))
+      (define base** (ftree-fold-right proc base* x))
+      (digits-fold-right proc base** l))))
+
+(define (ftree-fold-left proc base ftree)
+  (ftree-case ftree
+    (lambda () base)
+    (lambda (x) (nodetree-fold-left proc base x))
+    (lambda (l x r)
+      (define base* (digits-fold-left proc base l))
+      (define base** (ftree-fold-left proc base* x))
+      (digits-fold-left proc base** r))))
 
 (define (insert-front ftree val monoid)
   (ftree-case ftree
@@ -400,15 +456,8 @@
   (define monoid (make-monoid* id append convert))
   (%make-fingertree (list->tree l monoid) monoid))
 
-;; should be implemented in terms of a fingertree-fold-right, but later
 (define (fingertree->list t)
-  (if (fingertree-empty? t)
-      '()
-      (call-with-values
-          (lambda ()
-            (fingertree-uncons t))
-        (lambda (a t*)
-          (cons a (fingertree->list t*))))))
+  (fingertree-fold-right cons '() t))
 
 (define (fingertree-measure fingertree)
   (measure-ftree (fingertree-tree fingertree)
@@ -437,4 +486,11 @@
       (values (%wrap fingertree a)
               b
               (%wrap fingertree c)))))
+
+(define (fingertree-fold f b fingertree)
+  (ftree-fold-left f b (fingertree-tree fingertree)))
+
+(define (fingertree-fold-right f b fingertree)
+  (ftree-fold-right f b (fingertree-tree fingertree)))
+
 )
