@@ -11,7 +11,7 @@
         sequence-append
         list->sequence
         sequence->list
-        sequence
+        (rename (%sequence sequence))
         sequence-split-at
         sequence-take
         sequence-drop
@@ -68,7 +68,7 @@
 (define (sequence->list seq)
   (fingertree->list (sequence-fingertree seq)))
 
-(define (sequence . args)
+(define (%sequence . args)
   (list->sequence args))
 
 (define (sequence-split-at seq i)
