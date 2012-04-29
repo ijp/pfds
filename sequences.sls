@@ -16,6 +16,8 @@
         sequence-take
         sequence-drop
         sequence-ref
+        sequence-fold
+        sequence-fold-right
         )
 
 (import (rnrs)
@@ -96,5 +98,11 @@
                 (fingertree-split3 (lambda (x) (< i x))
                                    (sequence-fingertree seq))))
     x))
+
+(define (sequence-fold proc base seq)
+  (fingertree-fold proc base (sequence-fingertree seq)))
+
+(define (sequence-fold-right proc base seq)
+  (fingertree-fold-right proc base (sequence-fingertree seq)))
 
 )
