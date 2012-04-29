@@ -43,6 +43,17 @@
 (define (list->fingertree l)
   (%list->fingertree l 0 (lambda (x y) x) (lambda (x) x)))
 
+(define (list->product-tree l)
+  (%list->fingertree l 1 * values))
+
+(define (list->last-tree l)
+  (define *cookie* (cons 'no 'last))
+  (define (pick x y)
+    (if (eq? *cookie* y)
+        x
+        y))
+  (%list->fingertree l *cookie* pick values))
+
 (define-syntax test
   (syntax-rules ()
     ((test body)
@@ -708,5 +719,38 @@
       ;; non-associative operations
       (test-equal lrev (fingertree-fold cons '() ft))
       (test-equal l (fingertree-fold-right cons '() ft)))))
+
+(define-test-case fingertrees reversal
+  (let ((rev (lambda (l)
+               (fingertree->list
+                (fingertree-reverse (list->fingertree l)))))
+        (id (lambda (l)
+              (fingertree->list
+               (fingertree-reverse
+                (fingertree-reverse (list->fingertree l))))))
+        (l1 '(126 6 48 86 2 119 233 92 230 160))
+        (l2 '(25 168 21 246 39 211 60 83 103 161
+              192 201 31 253 156 218 204 186 155 117)))
+    (test-case reversal ()
+      ;; behaves the same as regular reverse on lists
+      (test-eqv '() (rev '()))
+      (test-equal '(1) (rev '(1)))
+      (test-equal '(6 5 4 3 2 1) (rev '(1 2 3 4 5 6)))
+      (test-equal (reverse l1) (rev l1))
+      (test-equal (reverse l2) (rev l2))
+      ;; double reversal is the the same list
+      (test-equal l1 (id l1))
+      (test-equal l2 (id l2))
+      ;; a fingertree will have the same measure as its reverse if
+      ;; the monoid is commutative
+      (test-equal (fingertree-measure (list->product-tree l1))
+                  (fingertree-measure
+                   (fingertree-reverse (list->product-tree l1))))
+      ;; otherwise they are not necessarily the same
+      ;; in this case, they are the same only if the first and last
+      ;; elements are the same
+      (test-not
+       (equal? (fingertree-measure (list->last-tree l2))
+               (fingertree-measure (fingertree-reverse (list->product-tree l2))))))))
 
 (run-test pfds)

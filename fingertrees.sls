@@ -16,6 +16,7 @@
         fingertree-split3
         fingertree-fold
         fingertree-fold-right
+        fingertree-reverse
         )
 (import (rnrs))
 
@@ -40,6 +41,9 @@
       '()
       (cons (car list)
             (but-last (cdr list)))))
+
+(define (map-reverse f l)
+  (fold-left (lambda (o n) (cons (f n) o)) '() l))
 
 ;;; Node type
 
@@ -315,6 +319,31 @@
            (cons (make-node3 monoid a b (caddr lst))
                  (nodes (cdddr lst) monoid))))))
 
+(define (reverse-tree tree monoid)
+  (ftree-case tree
+    (lambda () (make-empty))
+    (lambda (x) (make-single (reverse-nodetree x monoid)))
+    (lambda (l x r)
+      (make-rib monoid
+                (reverse-digit r monoid)
+                (reverse-tree x monoid)
+                (reverse-digit l monoid)))))
+
+(define (reverse-digit l monoid)
+  (map-reverse (lambda (a) (reverse-nodetree a monoid)) l))
+
+(define (reverse-nodetree l monoid)
+  (cond ((node2? l)
+         (make-node2 monoid
+                     (reverse-nodetree (node2-b l) monoid)
+                     (reverse-nodetree (node2-a l) monoid)))
+        ((node3? l)
+         (make-node3 monoid
+                     (reverse-nodetree (node3-c l) monoid)
+                     (reverse-nodetree (node3-b l) monoid)
+                     (reverse-nodetree (node3-a l) monoid)))
+        (else l)))
+
 ;; generalising fingertrees with monoids
 
 ;; I think I'm going to need a "configuration" type and pass it around
@@ -492,5 +521,10 @@
 
 (define (fingertree-fold-right f b fingertree)
   (ftree-fold-right f b (fingertree-tree fingertree)))
+
+(define (fingertree-reverse fingertree)
+  (%wrap fingertree
+         (reverse-tree (fingertree-tree fingertree)
+                       (fingertree-monoid fingertree))))
 
 )

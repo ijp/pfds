@@ -18,6 +18,7 @@
         sequence-ref
         sequence-fold
         sequence-fold-right
+        sequence-reverse
         )
 
 (import (rnrs)
@@ -104,5 +105,8 @@
 
 (define (sequence-fold-right proc base seq)
   (fingertree-fold-right proc base (sequence-fingertree seq)))
+
+(define (sequence-reverse seq)
+  (%make-sequence (fingertree-reverse (sequence-fingertree seq))))
 
 )
