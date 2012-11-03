@@ -1,7 +1,7 @@
 #!r6rs
 ;;; deques.sls --- Purely functional deques
 
-;; Copyright (C) 2011 Ian Price <ianprice90@googlemail.com>
+;; Copyright (C) 2011,2012 Ian Price <ianprice90@googlemail.com>
 
 ;; Author: Ian Price <ianprice90@googlemail.com>
 
@@ -169,12 +169,12 @@
          (let* ((n  (floor (/ (+ lenL lenR) 2)))
                 (l* (take n l))
                 (r* (rot1 n r l)))
-           (%make-deque len (- lenL n) (+ lenR n) l* r* l* r*)))
+           (%make-deque len n (- len n) l* r* l* r*)))
         ((> lenR (+ 1 (* c lenL)))
          (let* ((n  (floor (/ (+ lenL lenR) 2)))
                 (l* (rot1 n l r))
                 (r* (take n r)))
-           (%make-deque len (+ lenL n) (- lenR n) l* r* l* r*)))
+           (%make-deque len (- len n) n l* r* l* r*)))
         (else
          (%make-deque len lenL lenR l r l^ r^))))
 
