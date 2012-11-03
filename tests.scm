@@ -208,6 +208,17 @@
       (test-eqv 1 item2)
       (test-predicate deque-empty? deque2))))
 
+(define-test-case deques list-conversion ()
+  (let ((id-list (lambda (list)
+                   (deque->list (list->deque list))))
+        (l1 '())
+        (l2 '(1 2 3))
+        (l3 '(4 5 6 7 8 9 10))
+        (l4 (string->list "abcdefghijklmnopqrstuvwxyz")))
+    (test-equal l1 (id-list l1))
+    (test-equal l2 (id-list l2))
+    (test-equal l3 (id-list l3))
+    (test-equal l4 (id-list l4))))
 
 (define-test-suite (bbtrees pfds)
   "Tests for the bounded balance tree imlementation")

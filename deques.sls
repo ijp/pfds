@@ -54,6 +54,8 @@
         dequeue-front
         dequeue-rear
         deque-empty-condition?
+        deque->list
+        list->deque
         )
 (import (except (rnrs) cons*)
         (pfds private lazy-lists))
@@ -180,5 +182,16 @@
   &assertion
   make-deque-empty-condition
   deque-empty-condition?)
+
+(define (list->deque l)
+  (fold-left enqueue-rear (make-deque) l))
+
+(define (deque->list deq)
+  (define (recur deq l)
+    (if (deque-empty? deq)
+        l
+        (let-values ([(last deq*) (dequeue-rear deq)])
+          (recur deq* (cons last l)))))
+  (recur deq '()))
 
 )
