@@ -12,7 +12,8 @@
         heap->list
         list->heap
         heap-merge
-        heap-sort ;?
+        heap-sort
+        (rename (heap-ordering-predicate heap-ordering-procedure))
         )
 (import (rnrs))
 
