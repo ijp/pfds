@@ -3,7 +3,7 @@
 (export make-heap
         (rename (%heap heap))
         heap?
-        ;; heap-size
+        heap-size
         heap-empty?
         heap-min
         heap-delete-min
@@ -17,9 +17,14 @@
 (import (rnrs))
 
 (define-record-type (node %make-node node?)
-  (fields size value left right))
+  (fields size height value left right))
 
 (define-record-type leaf)
+
+(define (height x)
+  (if (leaf? x)
+      0
+      (node-height x)))
 
 (define (size x)
   (if (leaf? x)
@@ -27,15 +32,16 @@
       (node-size x)))
 
 (define (make-node v l r)
-  (define sl (size l))
-  (define sr (size r))
-  (define m (min sl sr))
+  (define sl (height l))
+  (define sr (height r))
+  (define m (+ 1 (min sl sr)))
+  (define sz (+ 1 (size l) (size r)))
   (if (< sl sr)
-      (%make-node m v r l)
-      (%make-node m v l r)))
+      (%make-node sz m v r l)
+      (%make-node sz m v l r)))
 
 (define (singleton v)
-  (%make-node 0 v (make-leaf) (make-leaf)))
+  (%make-node 1 0 v (make-leaf) (make-leaf)))
 
 (define (insert tree value prio<?)
   (merge-trees tree (singleton value) prio<?))
@@ -73,10 +79,8 @@
 (define (%heap < . vals)
   (list->heap vals <))
 
-;; TODO: currently size computes height, not number of elements
-;; need to get around to implementing this
-;; (define (heap-size heap)
-;;   (size (heap-tree heap)))
+(define (heap-size heap)
+  (size (heap-tree heap)))
 
 (define (heap-empty? heap)
   (leaf? (heap-tree heap)))
