@@ -1,4 +1,72 @@
 #!r6rs
+;; Copyright (C) 2012 Ian Price <ianprice90@googlemail.com>
+
+;; Author: Ian Price <ianprice90@googlemail.com>
+
+;; This program is free software, you can redistribute it and/or
+;; modify it under the terms of the new-style BSD license.
+
+;; You should have received a copy of the BSD license along with this
+;; program. If not, see <http://www.debian.org/misc/bsd.license>.
+
+;; Documentation:
+;;
+;; make-heap : (any any -> bool) -> heap
+;; returns a new empty heap which uses the ordering procedure.
+;;
+;; heap : (any any -> bool) any ... -> heap
+;; return a new heap, ordered by the procedure argument, that contains
+;; all the other arguments as elements.
+;;
+;; heap? : any -> bool
+;; returns #t if the argument is a heap, #f otherwise.
+;;
+;; heap-size : heap -> non-negative integer
+;; returns the number of elements in the heap.
+;;
+;; heap-empty? : heap -> bool
+;; returns #t if the heap contains no elements, #f otherwise.
+;;
+;; heap-min : heap -> any
+;; returns the minimum element in the heap, according the heap's
+;; ordering procedure. If there are no elements, a
+;; &heap-empty-condition is raised.
+;;
+;; heap-delete-min : heap -> heap
+;; returns a new heap containing all the elements of the heap
+;; argument, except for the minimum argument, as determined by the
+;; heap's ordering procedure. If there are no elements, a
+;; &heap-empty-condition is raised.
+;;
+;; heap-pop : any + heap
+;; returns two values: the the minimum value, and a heap obtained by
+;; removing the minimum value from the original heap. If the heap is
+;; empty, a &heap-empty-condition is raised.
+;;
+;; heap-insert : heap any -> heap
+;; returns the new heap obtained by adding the element to those in the
+;; argument heap.
+;;
+;; heap->list : heap -> Listof(any)
+;; returns the heap containing all the elements of the heap. The
+;; elements of the list are ordered according to the heap's ordering
+;; procedure.
+;;
+;; list->heap : Listof(any) (any any -> boolean) -> heap
+;; returns the heap containing all the elements of the list, and using
+;; the procedure argument to order the elements.
+;;
+;; heap-merge : heap heap -> heap
+;; returns the heap containing all the elements of the argument
+;; heaps. The argument heaps are assumed to be using the same ordering
+;; procedure.
+;;
+;; heap-sort : (any any -> bool) list -> list
+;; returns a new list that is a permutation of the argument list, such
+;; that all the elements are ordered by the given procedure.
+;;
+;; heap-ordering-procedure : heap -> (any any -> boolean)
+;; returns the ordering procedure used internally by the heap.
 (library (pfds heaps)
 (export make-heap
         (rename (%heap heap))
