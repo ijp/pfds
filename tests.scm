@@ -644,7 +644,10 @@
       (test-equal 4 (heap-min (heap-delete-min (heap-delete-min h2))))
       (test-equal '(7 9 11 13)
                   (heap->list
-                   (heap-delete-min (heap-delete-min (heap-delete-min h1))))))))
+                   (heap-delete-min (heap-delete-min (heap-delete-min h1)))))
+      (test-exn heap-empty-condition? (heap-pop (make-heap <)))
+      (test-exn heap-empty-condition? (heap-delete-min (make-heap <)))
+      (test-exn heap-empty-condition? (heap-min (make-heap <))))))
 
 (define-test-case heaps sorting
   (let ((l1 '(129 109 146 175 229 48 225 239 129 41

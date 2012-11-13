@@ -14,6 +14,7 @@
         heap-merge
         heap-sort
         (rename (heap-ordering-predicate heap-ordering-procedure))
+        heap-empty-condition?
         )
 (import (rnrs))
 
@@ -87,16 +88,31 @@
   (leaf? (heap-tree heap)))
 
 (define (heap-min heap)
-  (assert (not (heap-empty? heap)))
+  (when (heap-empty? heap)
+    (raise (condition
+            (make-heap-empty-condition)
+            (make-who-condition 'heap-min)
+            (make-message-condition "There is no minimum element.")
+            (make-irritants-condition (list heap)))))
   (node-value (heap-tree heap)))
 
 (define (heap-delete-min heap)
-  (assert (not (heap-empty? heap)))
+  (when (heap-empty? heap)
+    (raise (condition
+            (make-heap-empty-condition)
+            (make-who-condition 'heap-delete-min)
+            (make-message-condition "There is no minimum element.")
+            (make-irritants-condition (list heap)))))
   (let ((< (heap-ordering-predicate heap)))
     (%make-heap (delete-min (heap-tree heap) <) <)))
 
 (define (heap-pop heap)
-  (assert (not (heap-empty? heap)))
+  (when (heap-empty? heap)
+    (raise (condition
+            (make-heap-empty-condition)
+            (make-who-condition 'heap-pop)
+            (make-message-condition "There is no minimum element.")
+            (make-irritants-condition (list heap)))))
   (let* ((tree (heap-tree heap))
          (top  (node-value tree))
          (<    (heap-ordering-predicate heap))
@@ -137,4 +153,8 @@
 (define (heap-sort < list)
   (heap->list (list->heap list <)))
 
+(define-condition-type &heap-empty
+  &assertion
+  make-heap-empty-condition
+  heap-empty-condition?)
 )
