@@ -19,10 +19,19 @@
         sequence-fold
         sequence-fold-right
         sequence-reverse
+        sequence-empty-condition?
         )
 
 (import (rnrs)
         (pfds fingertrees))
+
+;; Note: as sequences are not a subtype of fingertrees, but rather a
+;; particular instantiation of them, &sequence-empty is not a subtype
+;; of &fingertree-empty
+(define-condition-type &sequence-empty
+  &assertion
+  make-sequence-empty-condition
+  sequence-empty-condition?)
 
 (define-record-type (sequence %make-sequence sequence?)
   (fields fingertree))
@@ -47,14 +56,30 @@
 (define (sequence-uncons seq)
   (call-with-values
       (lambda ()
-        (fingertree-uncons (sequence-fingertree seq)))
+        (define ft (sequence-fingertree seq))
+        (when (fingertree-empty? ft)
+          (raise
+           (condition
+            (make-sequence-empty-condition)
+            (make-who-condition 'sequence-uncons)
+            (make-message-condition "There are no elements to uncons")
+            (make-irritants-condition (list seq)))))
+        (fingertree-uncons ft))
     (lambda (head tree)
       (values head (%make-sequence tree)))))
 
 (define (sequence-unsnoc seq)
   (call-with-values
       (lambda ()
-        (fingertree-unsnoc (sequence-fingertree seq)))
+        (define ft (sequence-fingertree seq))
+        (when (fingertree-empty? ft)
+          (raise
+           (condition
+            (make-sequence-empty-condition)
+            (make-who-condition 'sequence-unsnoc)
+            (make-message-condition "There are no elements to unsnoc")
+            (make-irritants-condition (list seq)))))
+        (fingertree-unsnoc ft))
     (lambda (head tree)
       (values head (%make-sequence tree)))))
 
