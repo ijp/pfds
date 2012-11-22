@@ -649,6 +649,23 @@
       (test-equal l1 (fingertree->list (make l4)))
       (test-equal l1 (fingertree->list (make l5))))))
 
+(define-test-case fingertrees removal
+  (let* ((l1 '(a b c d e f))
+         (f1 (list->fingertree l1))
+         (f2 (make-fingertree)))
+    (test-case removal ()
+      (test-exn fingertree-empty-condition? (fingertree-uncons f2))
+      (test-exn fingertree-empty-condition? (fingertree-unsnoc f2))
+      (let-values (((head tail) (fingertree-uncons f1)))
+        (test-eqv (car l1) head)
+        (test-equal (cdr l1) (fingertree->list tail)))
+      (let*-values (((last init) (fingertree-unsnoc f1))
+                    ((l*) (reverse l1))
+                    ((l1-last) (car l*))
+                    ((l1-init) (reverse (cdr l*))))
+        (test-eqv l1-last last)
+        (test-equal l1-init (fingertree->list init))))))
+
 (define-test-case fingertrees conversion
   (let ((l1 '(31 238 100 129 6 169 239 150 96 141 207 208 190 45 56
               183 199 254 78 210 14 131 10 220 205 203 125 111 42 249))

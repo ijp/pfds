@@ -17,6 +17,7 @@
         fingertree-fold
         fingertree-fold-right
         fingertree-reverse
+        fingertree-empty-condition?
         )
 (import (rnrs))
 
@@ -426,6 +427,10 @@
               (values (cons (car xs) l) x r))))))
 
 ;; exported interface
+(define-condition-type &fingertree-empty
+  &assertion
+  make-fingertree-empty-condition
+  fingertree-empty-condition?)
 
 (define-record-type (fingertree %make-fingertree fingertree?)
   (fields tree monoid))
@@ -455,8 +460,15 @@
 (define (fingertree-uncons fingertree)
   (call-with-values
       (lambda ()
-        (remove-front (fingertree-tree fingertree)
-                      (fingertree-monoid fingertree)))
+        (define t (fingertree-tree fingertree))
+        (when (empty? t)
+          (raise
+           (condition
+            (make-fingertree-empty-condition)
+            (make-who-condition 'fingertree-uncons)
+            (make-message-condition "There are no elements to uncons")
+            (make-irritants-condition (list fingertree)))))
+        (remove-front t (fingertree-monoid fingertree)))
     (lambda (val rest)
       (values val
               (%wrap fingertree rest)))))
@@ -464,8 +476,15 @@
 (define (fingertree-unsnoc fingertree)
   (call-with-values
       (lambda ()
-        (remove-rear (fingertree-tree fingertree)
-                     (fingertree-monoid fingertree)))
+        (define t (fingertree-tree fingertree))
+        (when (empty? t)
+          (raise
+           (condition
+            (make-fingertree-empty-condition)
+            (make-who-condition 'fingertree-unsnoc)
+            (make-message-condition "There are no elements to unsnoc")
+            (make-irritants-condition (list fingertree)))))
+        (remove-rear t (fingertree-monoid fingertree)))
     (lambda (rest val)
       (values val
               (%wrap fingertree rest)))))
