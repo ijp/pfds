@@ -1,5 +1,146 @@
-;; Fingertrees are a useful base on which to build other data structures
 #!r6rs
+;;; fingertrees.sls --- A Simple General-Purpose Data Structure
+
+;; Copyright (C) 2012 Ian Price <ianprice90@googlemail.com>
+
+;; Author: Ian Price <ianprice90@googlemail.com>
+
+;; This program is free software, you can redistribute it and/or
+;; modify it under the terms of the new-style BSD license.
+
+;; You should have received a copy of the BSD license along with this
+;; program. If not, see <http://www.debian.org/misc/bsd.license>.
+
+;;; Commentary:
+;;
+;; Fingertrees are a generalised form of deque, that you can parameterise
+;; to compute a value, called the "measure" of a fingertree. This measure
+;; will be updated incrementally as you add and remove elements from the
+;; fingertree. Among other things, this allows fingertrees to be used
+;; where you otherwise might have written a custom data structure.
+;;
+;; To compute the measure, fingertrees require pieces of information: a
+;; converter, a combiner, and an identity.
+;;
+;; The converter is a procedure of one argument, that maps values in the
+;; fingertree to other values which are used for computing the measure.
+;;
+;; The combiner is a procedure of two arguments, and combines these into
+;; one value representing them both. A combiner must be associative
+;; i.e. (combine A (combine B C)) must be equivalent to (combine (combine
+;; A B) C) for all values A, B and C.
+;;
+;; An identity is a value that represents the measure of an empty
+;; fingertree. It must obey the rule that (combine X identity), (combine
+;; identity X) and X are always the same.
+;;
+;; To make things more concrete, a simple use of a fingertree is as a
+;; deque that keeps a running total. In this case, the converter can
+;; simply be the function (lambda (x) x) if it is a deque of integers,
+;; the combiner would be +, and the identity 0.
+;;
+;; (define l '(3 1 4 1 5 9))
+;;
+;; (define ft (list->fingertree l 0 + (lambda (x) x)))
+;;
+;; (fingertree-measure ft)
+;; ; => 23
+;; (fingertree-measure (fingertree-snoc ft 2))
+;; ; => 25
+;; (let-values (((head tail) (fingertree-uncons ft)))
+;;   (fingertree-measure tail))
+;; ; => 20
+;;
+;; Mathematically speaking, the _return type_ of the converter, the
+;; combiner and the identity element are expected to form a
+;; monoid.
+;;
+;; Below, I use the slightly incorrect terminology of referring to the
+;; combiner, the converter, and the identity, together as a
+;; monoid. Mathematicians, please forgive me. Programmers please forgive
+;; me even more. If you can provide a better name (from a programmers,
+;; not a mathematicians, point of view) that works in most circumstances,
+;; I will be happy to use it.
+;;
+;; (FWIW the Haskell Data.Fingertree package uses odd name of Measured
+;; (which are expected to be instances of Monoid))
+;;
+;; fingertree? : any -> bool
+;; returns #t if argument is a fingertree, #f otherwise.
+;;
+;; fingertree-empty? : fingertree -> bool
+;; returns #t if there are no items in the fingertree, #f otherwise.
+;;
+;; make-fingertree : id combine measure -> fingertree
+;; returns a new fingertree, parameterised by the given monoid.
+;;
+;; fingertree-cons : any fingertree -> fingertree
+;; returns the new fingertree created by adding the element to the front
+;; of the argument fingertree.
+;;
+;; fingertree-snoc : fingertree any -> fingertree
+;; returns the new fingertree created by adding the element to the end of
+;; the fingertree.
+;;
+;; fingertree-uncons : fingertree -> any + fingertree
+;; returns two values: the element at the front of the fingertree, and a
+;; new fingertree containing all but the front element. If the fingertree
+;; is empty, a &fingertree-empty condition is raised.
+;;
+;; fingertree-unsnoc : fingertree -> any + fingertree
+;; returns two values: the element at the rear of the fingertree, and a
+;; new fingertree containing all but the rear element. If the fingertree
+;; is empty, a &fingertree-empty condition is raised.
+;;
+;; fingertree-append : fingertree fingertree -> fingertree
+;; returns a new fingertree which contains all of the elements of the
+;; first fingertree argument, followed by all the elements of the
+;; second. The argument fingertrees are assumed to be parameterised by
+;; the same monoid.
+;;
+;; list->fingertree : (list->fingertree l id append convert)
+;; returns a fingertree containing all of the elements of the argument
+;; list, in the same order.
+;;
+;; fingertree->list : fingertree -> Listof(Any)
+;; returns a list of all the elements in the fingertree, in the order
+;; they would be unconsed.
+;;
+;; fingertree-measure : fingertree -> any
+;; returns the measure of the fingertree, as defined by the fingertree's
+;; monoid.
+;;
+;; fingertree-split : (any -> bool) fingertree -> fingertree + fingertree
+;; returns two values: the first is the largest prefix of the fingertree for
+;; which applying the predicate to it's accumulated measure returns
+;; #f. The second values is a fingertree containing all those elements
+;; not in the first fingertree.
+;;
+;; fingertree-split3: (any -> bool) fingertree -> fingertree + value + fingertree
+;; similar to fingertree-split, however, instead of returning the
+;; remainder as the second argument, it returns the head of the remainder
+;; as the second argument, and tail of the remainder as the third
+;; argument.
+;; TODO: what error should I give if the remainder was empty?
+;;
+;; fingertree-fold : (any -> any -> any) any fingertree
+;; returns the value obtained by iterating the combiner procedure over
+;; the fingertree in left-to-right order. This procedure takes two
+;; arguments, the current value from the fingertree, and an accumulator,
+;; and it's return value is used as the accumulator for the next
+;; iteration. The initial value for the accumulator is given by the base
+;; argument.
+;;
+;; fingertree-fold-right : (any -> any -> any) any fingertree
+;; similar to fingertree-fold, but iterates in right-to-left order.
+;;
+;; fingertree-reverse : fingertree -> fingertree
+;; returns a new fingertree in which the elements are in the opposite
+;; order from the argument fingertree.
+;;
+;; fingertree-empty-condition? : condition -> bool
+;; returns #t if the argument is a &fingertree-empty condition, #f otherwise.
+;;
 (library (pfds fingertrees)
 (export fingertree?
         fingertree-empty?
