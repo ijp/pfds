@@ -93,6 +93,12 @@
 ;; index is negative, or greater than the number of elements in the
 ;; sequence, an &assertion-violation is raised.
 ;;
+;; sequence-set : sequence non-negative-integer any -> sequence
+;; returns the new sequence obtained by replacing the element at the
+;; specified index in the sequence with the given value. If the index
+;; is outside the range 0 <= i < (sequence-size sequence), an
+;; assertion violation is raised.
+;;
 ;; sequence-fold (any -> any -> any) any sequence
 ;; returns the value obtained by iterating the combiner procedure over
 ;; the sequence in left-to-right order. The combiner procedure takes two
@@ -137,6 +143,7 @@
         sequence-take
         sequence-drop
         sequence-ref
+        sequence-set
         sequence-fold
         sequence-fold-right
         sequence-reverse
@@ -245,6 +252,16 @@
                 (fingertree-split3 (lambda (x) (< i x))
                                    (sequence-fingertree seq))))
     x))
+
+(define (sequence-set seq i val)
+  (define size (sequence-size seq))
+  (unless (and (<= 0 i) (< i size))
+    (assertion-violation 'sequence-set "Index out of range" i))
+  (let-values (((l x r)
+                (fingertree-split3 (lambda (x) (< i x))
+                                   (sequence-fingertree seq))))
+    (%make-sequence
+     (fingertree-append l (fingertree-cons val r)))))
 
 (define (sequence-fold proc base seq)
   (fingertree-fold proc base (sequence-fingertree seq)))
