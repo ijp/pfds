@@ -67,6 +67,10 @@
 ;;
 ;; heap-ordering-procedure : heap -> (any any -> boolean)
 ;; returns the ordering procedure used internally by the heap.
+;;
+;; heap-empty-condition? : any -> bool
+;; returns #t if argument is a &heap-empty condition, #f otherwise.
+;;
 (library (pfds heaps)
 (export make-heap
         (rename (%heap heap))
