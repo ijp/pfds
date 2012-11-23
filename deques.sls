@@ -44,6 +44,16 @@
 ;; deque-empty-condition? : object -> boolean
 ;; tests if an object is a &deque-empty condition
 ;;
+;; deque->list : deque -> listof(any)
+;; returns a list containing all the elements of the deque. The order
+;; of the elements in the list is the same as the order they would be
+;; dequeued from the front of the deque.
+;;
+;; list->deque : listof(any) -> deque
+;; returns a deque containing all of the elements in the list. The
+;; order of the elements in the deque is the same as the order of the
+;; elements in the list.
+;;
 (library (pfds deques)
 (export make-deque
         deque?
