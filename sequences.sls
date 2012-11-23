@@ -147,6 +147,8 @@
         sequence-fold
         sequence-fold-right
         sequence-reverse
+        sequence-map
+        sequence-filter
         sequence-empty-condition?
         )
 
