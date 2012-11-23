@@ -109,6 +109,14 @@
 ;; returns a new sequence containing all the arguments of the argument
 ;; list, in reverse order.
 ;;
+;; sequence-map : (any -> any) sequence -> sequence
+;; returns a new sequence obtained by applying the procedure to each
+;; element of the argument sequence in turn.
+;;
+;; sequence-filter : (any -> bool) sequence -> sequence
+;; returns a new sequence containing all the elements of the argument
+;; sequence for which the predicate is true.
+;;
 ;; sequence-empty-condition? : any -> bool
 ;; returns #t if an object is a &sequence-empty condition, #f otherwise.
 ;;
@@ -246,5 +254,17 @@
 
 (define (sequence-reverse seq)
   (%make-sequence (fingertree-reverse (sequence-fingertree seq))))
+
+(define (sequence-map proc seq)
+  (define (combine element seq)
+    (sequence-cons (proc element) seq))
+  (sequence-fold-right combine (make-sequence) seq))
+
+(define (sequence-filter pred? seq)
+  (define (combine element seq)
+    (if (pred? element)
+        (sequence-cons element seq)
+        seq))
+  (sequence-fold-right combine (make-sequence) seq))
 
 )
