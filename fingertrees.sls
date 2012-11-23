@@ -87,10 +87,10 @@
 ;; new fingertree containing all but the front element. If the fingertree
 ;; is empty, a &fingertree-empty condition is raised.
 ;;
-;; fingertree-unsnoc : fingertree -> any + fingertree
-;; returns two values: the element at the rear of the fingertree, and a
-;; new fingertree containing all but the rear element. If the fingertree
-;; is empty, a &fingertree-empty condition is raised.
+;; fingertree-unsnoc : fingertree -> fingertree + any
+;; returns two values: a new fingertree containing all but the rear
+;; element of the argument fingertree, and the rear element itself. If
+;; the fingertree is empty, a &fingertree-empty-condition is raised.
 ;;
 ;; fingertree-append : fingertree fingertree -> fingertree
 ;; returns a new fingertree which contains all of the elements of the
@@ -627,8 +627,7 @@
             (make-irritants-condition (list fingertree)))))
         (remove-rear t (fingertree-monoid fingertree)))
     (lambda (rest val)
-      (values val
-              (%wrap fingertree rest)))))
+      (values (%wrap fingertree rest) val))))
 
 (define (fingertree-empty? fingertree)
   (empty? (fingertree-tree fingertree)))

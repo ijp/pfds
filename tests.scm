@@ -733,7 +733,7 @@
       (let-values (((head tail) (fingertree-uncons f1)))
         (test-eqv (car l1) head)
         (test-equal (cdr l1) (fingertree->list tail)))
-      (let*-values (((last init) (fingertree-unsnoc f1))
+      (let*-values (((init last) (fingertree-unsnoc f1))
                     ((l*) (reverse l1))
                     ((l1-last) (car l*))
                     ((l1-init) (reverse (cdr l*))))

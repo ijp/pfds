@@ -47,10 +47,10 @@
 ;; return the new sequence created by adding the element to the end of
 ;; the sequence.
 ;;
-;; sequence-unsnoc : sequence -> any sequence
-;; returns two values: the last element of the sequence, and a new
-;; sequence containing all but the last element. If the sequence is
-;; empty, a &sequence-empty condition is raised.
+;; sequence-unsnoc : sequence -> sequence any
+;; returns two values: a new sequence containing all but the last
+;; element of the sequence, and the last element itself. If the
+;; sequence is empty, a &sequence-empty condition is raised.
 ;;
 ;; sequence-append : sequence sequence -> sequence
 ;; returns a new sequence containing all the elements of the first
@@ -193,8 +193,8 @@
             (make-message-condition "There are no elements to unsnoc")
             (make-irritants-condition (list seq)))))
         (fingertree-unsnoc ft))
-    (lambda (head tree)
-      (values head (%make-sequence tree)))))
+    (lambda (tree last)
+      (values (%make-sequence tree) last))))
 
 (define (sequence-append seq1 seq2)
   (%make-sequence
