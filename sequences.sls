@@ -90,8 +90,8 @@
 ;;
 ;; sequence-ref : sequence non-negative-integer -> any
 ;; returns the element at the specified index in the sequence. If the
-;; index is negative, or greater than the number of elements in the
-;; sequence, an &assertion-violation is raised.
+;; index is outside the range 0 <= i < (sequence-size sequence), an
+;; assertion violation is raised.
 ;;
 ;; sequence-set : sequence non-negative-integer any -> sequence
 ;; returns the new sequence obtained by replacing the element at the
@@ -246,7 +246,7 @@
 
 (define (sequence-ref seq i)
   (define size (sequence-size seq))
-  (unless (<= 0 i size)
+  (unless (and (<= 0 i) (< i size))
     (assertion-violation 'sequence-ref "Index out of range" i))
   (let-values (((_l x _r)
                 (fingertree-split3 (lambda (x) (< i x))
