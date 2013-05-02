@@ -62,7 +62,7 @@
 ;; other, more specific tree traversal procedures. For example,
 ;;   (define (l-to-r-pre-order cons base bbtree)
 ;;     (bbtree-traverse (lambda (key value left right base)
-;;                        (r (l (cons key value base))))
+;;                        (right (left (cons key value base))))
 ;;                      base
 ;;                      bbtree))
 ;; implements a left-to-right pre-order traversal variant of bbtree-fold
