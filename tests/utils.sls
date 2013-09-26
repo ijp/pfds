@@ -1,6 +1,7 @@
 #!r6rs
 (library (pfds tests utils)
-(export test
+(export pfds
+        test
         test-not
         test-exn
         test-no-exn
@@ -9,6 +10,9 @@
         )
 (import (rnrs)
         (wak trc-testing))
+
+(define-test-suite pfds
+  "Test suite for libraries under the (pfds) namespace")
 
 (define-syntax test
   (syntax-rules ()
