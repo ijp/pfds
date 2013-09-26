@@ -21,15 +21,8 @@
                 (make-fingertree %make-fingertree)
                 (list->fingertree %list->fingertree))
         (pfds sequences)
+        (pfds tests utils)
         (wak trc-testing))
-
-(define (add1 x)
-  (+ x 1))
-
-(define (foldl kons knil list)
-  (if (null? list)
-      knil
-      (foldl kons (kons (car list) knil) (cdr list))))
 
 (define (alist->psq alist key<? priority<?)
   (foldl (lambda (kv psq)
@@ -56,33 +49,6 @@
         y))
   (%list->fingertree l *cookie* pick values))
 
-(define-syntax test
-  (syntax-rules ()
-    ((test body)
-     (test-eqv #t (and body #t)))))
-
-(define-syntax test-not
-  (syntax-rules ()
-    ((test-not body)
-     (test-eqv #f body))))
-
-(define-syntax test-exn
-  (syntax-rules ()
-    ((test-exn exception-pred? body)
-     (test-eqv #t
-               (guard (exn ((exception-pred? exn) #t)
-                           (else #f))
-                 body
-                 #f)))))
-
-(define-syntax test-no-exn
-  (syntax-rules ()
-    ((test-no-exn body)
-     (test-eqv #t
-               (guard (exn (else #f))
-                 body
-                 #t)))))
-
 (define-test-suite pfds
   "Test suite for libraries under the (pfds) namespace")
 
@@ -94,16 +60,17 @@
   (test-predicate queue-empty? (make-queue))
   (test-eqv 0 (queue-length (make-queue))))
 
-(define-test-case queues enqueue ()
+(define-test-case queues enqueue
   (let ((queue (enqueue (make-queue) 'foo)))
-    (test-predicate queue? queue)
-    (test-eqv #t (not (queue-empty? queue)))
-    (test-eqv 1 (queue-length queue))
-    (test-eqv 10 (queue-length
-                  (foldl (lambda (val queue)
-                           (enqueue queue val))
-                         (make-queue)
-                         '(0 1 2 3 4 5 6 7 8 9))))))
+    (test-case enqueue ()
+      (test-predicate queue? queue)
+      (test-eqv #t (not (queue-empty? queue)))
+      (test-eqv 1 (queue-length queue))
+      (test-eqv 10 (queue-length
+                    (foldl (lambda (val queue)
+                             (enqueue queue val))
+                           (make-queue)
+                           '(0 1 2 3 4 5 6 7 8 9)))))))
 
 (define-test-case queues dequeue ()
   (let ((empty (make-queue))
