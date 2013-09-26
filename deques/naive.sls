@@ -1,4 +1,28 @@
 #!r6rs
+;;; naive.sls --- Purely functional deques.
+
+;; Copyright (C) 2013 Ian Price <ianprice90@googlemail.com>
+
+;; Author: Ian Price <ianprice90@googlemail.com>
+
+;; This program is free software, you can redistribute it and/or
+;; modify it under the terms of the new-style BSD license.
+
+;; You should have received a copy of the BSD license along with this
+;; program. If not, see <http://www.debian.org/misc/bsd.license>.
+
+;;; Commentary:
+
+;; This code shares the same interface as (pfds deques). Please see
+;; that module for documentation of the interface.
+
+;; Like (pfds queues naive), this provides a naive version that may be
+;; more expensive in certain access patterns, but can be cheaper in
+;; some common ones.
+
+;; As always, if in doubt, benchmark.
+
+;;; Code:
 (library (pfds deques naive)
 (export make-deque
         deque?
