@@ -210,10 +210,13 @@
   (not-implemented-yet 'size)) ; TODO:
 
 (define hamt-ref
-  ;; TODO: use higher order method
   (case-lambda
     ((hamt key)
-     (not-implemented-yet 'ref2)) ; TODO:
+     (define token (cons #f #f))
+     (define return-val (hamt-ref hamt key token))
+     (when (eqv? token return-val)
+       (assertion-violation 'hamt-ref "Key is not in the hamt" key))
+     return-val)
     ((hamt key default)
      ;; assert hamt?
      (lookup (hamt-root hamt)
