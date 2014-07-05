@@ -243,7 +243,10 @@
   (wrap-root root hamt))
 
 (define (hamt-contains? hamt key)
-  (not-implemented-yet 'contains)) ; TODO:
+  (define token (cons #f #f))
+  (if (eqv? token (hamt-ref hamt key token))
+      #t
+      #f))
 
 (define (hamt->alist hamt)
   (not-implemented-yet '->alist)) ; TODO:
