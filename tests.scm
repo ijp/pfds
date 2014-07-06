@@ -19,6 +19,7 @@
         (pfds tests heaps)
         (pfds tests fingertrees)
         (pfds tests sequences)
+        (pfds tests hamts)
         (pfds tests utils)
         (wak trc-testing))
 
