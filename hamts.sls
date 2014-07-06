@@ -10,7 +10,7 @@
         hamt-contains?
         hamt-equivalence-predicate
         hamt-hash-function
-        ;; hamt-fold
+        hamt-fold
         ;; hamt-map
         hamt->alist
         alist->hamt
@@ -191,6 +191,41 @@
         (else
          (vector-set vector idx (handle-subtrie node (shift h))))))
 
+(define (fold combine initial vector)
+  ;; vector-fold is left to right
+  (define (vector-fold combine initial vector)
+    (define len (vector-length vector))
+    (let loop ((index 0) (accum initial))
+      (if (>= index len)
+          accum
+          (loop (+ index 1)
+                (combine (vector-ref vector index) accum)))))
+
+  (define (handle-subtrie trie accum)
+    (vector-fold dispatch accum (subtrie-vector vector)))
+
+  (define (handle-leaf leaf accum)
+    (combine (leaf-key leaf) (leaf-value leaf) accum))
+
+  (define (handle-collision collision accum)
+    (fold-right (lambda (pair acc)
+                  (combine (car pair) (cdr pair) acc))
+                accum
+                (collision-alist collision)))
+
+  (define (dispatch val accum)
+    (cond ((leaf? val)
+           (handle-leaf val accum))
+          ((collision? val)
+           (handle-collision val accum))
+          (else
+           (handle-subtrie val accum))))
+
+  (vector-fold (lambda (val accum)
+                 ;; top level can have false values
+                 (if (not val) accum (dispatch val accum)))
+               initial
+               vector))
 
 
 ;;; Exported Interface
@@ -251,8 +286,14 @@
       #t
       #f))
 
+(define (hamt-fold combine initial hamt)
+  (fold combine initial (hamt-root hamt)))
+
 (define (hamt->alist hamt)
-  (not-implemented-yet '->alist)) ; TODO:
+  (hamt-fold (lambda (key value accumulator)
+               (cons (cons key value) accumulator))
+             '()
+             hamt))
 
 (define (alist->hamt alist hash eqv?)
   (fold-right (lambda (kv-pair hamt)
