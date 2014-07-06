@@ -47,4 +47,16 @@
     (test-compare compare-string-alist l
                   (hamt->alist (alist->hamt l string-hash string=?)))))
 
+(define-test-case hamts hamt-folding ()
+  ;; count size
+  (let ((h (alist->hamt '(("a" . 1) ("b" . 2) ("c" . 3)) string-hash string=?))
+        (increment (lambda (k v acc) (+ 1 acc))))
+    (test-equal 3 (hamt-fold increment 0 h)))
+  ;; copy hamt
+  (let* ((l '(("a" . 1) ("b" . 2) ("c" . 3)))
+         (h (alist->hamt l string-hash string=?))
+         (add (lambda (k v acc) (hamt-set acc k v))))
+    (test-compare compare-string-alist l
+                  (hamt->alist (hamt-fold add (make-string-hamt) h)))))
+
 )
