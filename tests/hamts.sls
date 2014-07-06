@@ -59,4 +59,14 @@
     (test-compare compare-string-alist l
                   (hamt->alist (hamt-fold add (make-string-hamt) h)))))
 
+(define-test-case hamts hamt-removal ()
+  ;; removed key exists
+  (let* ((l  '(("a" . 1) ("b" . 2) ("c" . 3)))
+         (h (alist->hamt l string-hash string=?)))
+    (test-compare compare-string-alist '(("b" . 2) ("c" . 3)) (hamt-delete h "a")))
+  ;; removed key does not exist
+  (let* ((l  '(("a" . 1) ("b" . 2) ("c" . 3)))
+         (h (alist->hamt l string-hash string=?)))
+    (test-compare compare-string-alist l (hamt-delete h "d"))))
+
 )
