@@ -25,4 +25,16 @@
   ;; shadowing an existing key
   (test-equal "baz" (hamt-ref (hamt-set (hamt-set (make-string-hamt) "foo" "bar") "foo" "baz") "foo" #f)))
 
+(define-test-case hamts hamt-conversion ()
+  ;; alist->hamt / distinct keys
+  (let* ((l '(("a" . 1) ("b" . 2) ("c" . 3)))
+         (h (alist->hamt l string-hash string=?)))
+    (test-equal (list 1 2 3)
+                (map (lambda (x) (hamt-ref h x #f)) (list "a" "b" "c"))))
+  ;; alist->hamt / overlapping keys (leftmost shadows)
+  (let* ((l '(("a" . 1) ("b" . 2) ("c" . 3) ("a" . 4)))
+         (h (alist->hamt l string-hash string=?)))
+    (test-equal (list 1 2 3)
+                (map (lambda (x) (hamt-ref h x #f)) (list "a" "b" "c")))))
+
 )
