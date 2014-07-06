@@ -9,6 +9,12 @@
 (define (make-string-hamt)
   (make-hamt string-hash string=?))
 
+(define (compare-string-alist l1 l2)
+  (lambda (l1 l2)
+    (define (compare x y) (string<? (car x) (car y)))
+    (equal? (list-sort compare l1)
+            (list-sort compare l2))))
+
 (define-test-suite (hamts pfds)
   "Tests for the Hash Array Mapped Trie implementation")
 
@@ -35,6 +41,10 @@
   (let* ((l '(("a" . 1) ("b" . 2) ("c" . 3) ("a" . 4)))
          (h (alist->hamt l string-hash string=?)))
     (test-equal (list 1 2 3)
-                (map (lambda (x) (hamt-ref h x #f)) (list "a" "b" "c")))))
+                (map (lambda (x) (hamt-ref h x #f)) (list "a" "b" "c"))))
+  ;; hamt->alist / distinct keys means left inverse
+  (let ((l '(("a" . 1) ("b" . 2) ("c" . 3))))
+    (test-compare compare-string-alist l
+                  (hamt->alist (alist->hamt l string-hash string=?)))))
 
 )
