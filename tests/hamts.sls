@@ -87,4 +87,17 @@
         (hash   (lambda (n) (exact (floor (/ n 2))))))
     (test-no-exn (foldl insert (make-hamt hash =) (iota 100)))))
 
+
+(define-test-case hamts hamt-mapping ()
+  (let* ((l '(("a" . 97) ("b" . 98) ("c" . 99)))
+         (h (alist->hamt l string-hash string=?)))
+    (test-compare compare-string-alist l
+                  (hamt->alist (hamt-map (lambda (x) x) h))))
+  (let* ((l '(("a" . 97) ("b" . 98) ("c" . 99)))
+         (h (alist->hamt l string-hash string=?))
+         (stringify (lambda (n) (string (integer->char n)))))
+    (test-compare compare-string-alist
+                  '(("a". "a") ("b" . "b") ("c" . "c"))
+                  (hamt->alist (hamt-map stringify h)))))
+
 )

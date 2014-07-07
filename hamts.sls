@@ -11,7 +11,7 @@
         hamt-equivalence-predicate
         hamt-hash-function
         hamt-fold
-        ;; hamt-map
+        hamt-map
         hamt->alist
         alist->hamt
         ;; make-eqv-hamt
@@ -192,6 +192,34 @@
         (else
          (vector-set vector idx (handle-subtrie node (shift h))))))
 
+(define (vec-map mapper vector)
+  (define (handle-subtrie trie)
+    (make-subtrie (subtrie-bitmap trie)
+                  (vector-map dispatch (subtrie-vector vector))))
+
+  (define (handle-leaf leaf)
+    (make-leaf (leaf-key leaf)
+               (mapper (leaf-value leaf))))
+
+  (define (handle-collision collision)
+    (make-collision (collision-hash collision)
+                    (map (lambda (pair)
+                           (cons (car pair) (mapper (cdr pair))))
+                         (collision-alist collision))))
+
+  (define (dispatch val)
+    (cond ((leaf? val)
+           (handle-leaf val))
+          ((collision? val)
+           (handle-collision val))
+          (else
+           (handle-subtrie val))))
+
+  (vector-map (lambda (val)
+                ;; top can have #f values
+                (and val (dispatch val)))
+              vector))
+
 (define (fold combine initial vector)
   ;; vector-fold is left to right
   (define (vector-fold combine initial vector)
@@ -286,6 +314,9 @@
   (if (eqv? token (hamt-ref hamt key token))
       #f
       #t))
+
+(define (hamt-map mapper hamt)
+  (wrap-root (vec-map mapper (hamt-root hamt)) hamt))
 
 (define (hamt-fold combine initial hamt)
   (fold combine initial (hamt-root hamt)))
