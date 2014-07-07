@@ -39,16 +39,36 @@
 (define (ctpop key index)
   (bitwise-bit-count (bitwise-arithmetic-shift-right key (+ 1 index))))
 
+;; vector-fold is left to right
+(define (vector-fold combine initial vector)
+  (define len (vector-length vector))
+  (let loop ((index 0) (accum initial))
+    (if (>= index len)
+        accum
+        (loop (+ index 1)
+              (combine (vector-ref vector index) accum)))))
+
 ;;; Node types
 
-(define-record-type subtrie
-  (fields bitmap vector))
+(define-record-type (subtrie %make-subtrie subtrie?)
+  (fields size bitmap vector))
+
+(define (make-subtrie bitmap vector)
+  (define vecsize
+    (vector-fold (lambda (val accum)
+                   (+ (size val) accum))
+                 0
+                 vector))
+  (%make-subtrie vecsize bitmap vector))
 
 (define-record-type leaf
   (fields key value))
 
-(define-record-type collision
-  (fields hash alist))
+(define-record-type (collision %make-collision collision?)
+  (fields size hash alist))
+
+(define (make-collision hash alist)
+  (%make-collision (length alist) hash alist))
 
 ;;; Main
 
@@ -221,15 +241,6 @@
               vector))
 
 (define (fold combine initial vector)
-  ;; vector-fold is left to right
-  (define (vector-fold combine initial vector)
-    (define len (vector-length vector))
-    (let loop ((index 0) (accum initial))
-      (if (>= index len)
-          accum
-          (loop (+ index 1)
-                (combine (vector-ref vector index) accum)))))
-
   (define (handle-subtrie trie accum)
     (vector-fold dispatch accum (subtrie-vector vector)))
 
@@ -256,22 +267,30 @@
                initial
                vector))
 
+(define (size node)
+  (cond ((not node) 0)
+        ((leaf? node) 1)
+        ((collision? node) (collision-size node))
+        (else (subtrie-size node))))
 
 ;;; Exported Interface
 
 (define-record-type (hamt %make-hamt hamt?)
-  (fields root hash-function equivalence-predicate))
+  (fields size root hash-function equivalence-predicate))
 
 (define (wrap-root root hamt)
-  (%make-hamt root
+  (define vecsize
+    (vector-fold (lambda (val accum)
+                   (+ (size val) accum))
+                 0
+                 root))
+  (%make-hamt vecsize
+              root
               (hamt-hash-function hamt)
               (hamt-equivalence-predicate hamt)))
 
 (define (make-hamt hash eqv?)
-  (%make-hamt (make-vector cardinality #f) hash eqv?))
-
-(define (hamt-size hamt)
-  (not-implemented-yet 'size)) ; TODO:
+  (%make-hamt 0 (make-vector cardinality #f) hash eqv?))
 
 (define hamt-ref
   (case-lambda
@@ -316,7 +335,10 @@
       #t))
 
 (define (hamt-map mapper hamt)
-  (wrap-root (vec-map mapper (hamt-root hamt)) hamt))
+  (%make-hamt (hamt-size hamt)
+              (vec-map mapper (hamt-root hamt))
+              (hamt-hash-function hamt)
+              (hamt-equivalence-predicate hamt)))
 
 (define (hamt-fold combine initial hamt)
   (fold combine initial (hamt-root hamt)))
