@@ -142,7 +142,7 @@
         (else
          (vector-set hvector idx (handle-subtrie node (shift h) initial-level)))))
 
-(define (remove vector key hash eqv?)
+(define (delete vector key hash eqv?)
   (define (handle-subtrie subtrie hash)
     (define bitmap  (subtrie-bitmap subtrie))
     (define vector  (subtrie-vector subtrie))
@@ -275,7 +275,7 @@
 
 (define (hamt-delete hamt key)
   (define root
-    (remove (hamt-root hamt)
+    (delete (hamt-root hamt)
             key
             (hamt-hash-function hamt)
             (hamt-equivalence-predicate hamt)))
