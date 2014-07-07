@@ -75,6 +75,10 @@
   ;; a bad hash function does not cause problems
   (let* ((l  '(("a" . 1) ("b" . 2) ("c" . 3)))
          (h (alist->hamt l bad-hash string=?)))
-    (test-compare compare-string-alist l (hamt->alist h))))
+    (test-compare compare-string-alist l (hamt->alist h)))
+  ;; stress test, since bigger amounts data usually finds bugs
+  (let ((insert (lambda (val hamt) (hamt-set hamt val val)))
+        (hash   (lambda (n) (exact (floor (/ n 2))))))
+    (test-no-exn (foldl insert (make-hamt hash =) (iota 100)))))
 
 )
