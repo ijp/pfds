@@ -118,8 +118,9 @@
 
   (define (handle-collision node hash level)
     (define chash (bitwise-arithmetic-shift-right (collision-hash node) level))
-    (if (eqv? hash collision-hash)
-        (alist-set (collision-alist node) key value eqv?)
+    (if (equal? hash chash)
+        (make-collision (collision-hash node)
+                        (alist-set (collision-alist node) key value eqv?))
         ;; TODO: there may be a better (more efficient) way to do this
         ;; but simple is better for now (see also handle-leaf)
         (handle-subtrie (wrap-subtrie node chash) hash (level-up level))))
