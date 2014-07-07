@@ -33,6 +33,12 @@
   ;; shadowing an existing key
   (test-equal "baz" (hamt-ref (hamt-set (hamt-set (make-string-hamt) "foo" "bar") "foo" "baz") "foo" #f)))
 
+(define-test-case hamts hamt-contains ()
+  (let ((h (hamt-set (make-string-hamt) "foo" 1)))
+    (test-eqv #t (hamt-contains? h "foo")))
+  (let ((h (hamt-set (make-string-hamt) "foo" 1)))
+    (test-eqv #f (hamt-contains? h "bar"))))
+
 (define-test-case hamts hamt-conversion ()
   ;; alist->hamt / distinct keys
   (let* ((l '(("a" . 1) ("b" . 2) ("c" . 3)))

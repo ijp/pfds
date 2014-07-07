@@ -284,8 +284,8 @@
 (define (hamt-contains? hamt key)
   (define token (cons #f #f))
   (if (eqv? token (hamt-ref hamt key token))
-      #t
-      #f))
+      #f
+      #t))
 
 (define (hamt-fold combine initial hamt)
   (fold combine initial (hamt-root hamt)))
