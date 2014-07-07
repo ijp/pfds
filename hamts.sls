@@ -106,7 +106,7 @@
 
   (define (handle-leaf node khash level)
     (define lkey  (leaf-key node))
-    (define lhash (hash lkey))
+    (define lhash (bitwise-arithmetic-shift-right (hash lkey) level))
     (cond ((eqv? key lkey)
            (make-leaf key value))
           ((equal? khash lhash)
