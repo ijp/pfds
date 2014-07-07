@@ -114,7 +114,7 @@
                            (list (cons lkey (leaf-value node))
                                  (cons key value))))
           (else
-           (handle-subtrie (wrap-subtrie node lhash) khash (level-up level)))))
+           (handle-subtrie (wrap-subtrie node lhash) (shift khash) (level-up level)))))
 
   (define (handle-collision node hash level)
     (define chash (bitwise-arithmetic-shift-right (collision-hash node) level))
@@ -123,7 +123,7 @@
                         (alist-set (collision-alist node) key value eqv?))
         ;; TODO: there may be a better (more efficient) way to do this
         ;; but simple is better for now (see also handle-leaf)
-        (handle-subtrie (wrap-subtrie node chash) hash (level-up level))))
+        (handle-subtrie (wrap-subtrie node chash) (shift hash) (level-up level))))
 
   (define (wrap-subtrie node chash)
     (make-subtrie (bitwise-bit-set 0 (mask chash)) (vector node)))
