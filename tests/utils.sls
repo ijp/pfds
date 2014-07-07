@@ -7,6 +7,7 @@
         test-no-exn
         add1
         foldl
+        iota
         )
 (import (rnrs)
         (wak trc-testing))
@@ -48,5 +49,13 @@
   (if (null? list)
       knil
       (foldl kons (kons (car list) knil) (cdr list))))
+
+(define (iota n)
+  (define (recur x)
+    (if (< x n)
+        (cons x (recur (+ x 1)))
+        '()))
+  (assert (integer? n))
+  (recur 0))
 
 )
