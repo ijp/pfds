@@ -15,6 +15,8 @@
     (equal? (list-sort compare l1)
             (list-sort compare l2))))
 
+(define (bad-hash x) 0)
+
 (define-test-suite (hamts pfds)
   "Tests for the Hash Array Mapped Trie implementation")
 
@@ -68,5 +70,11 @@
   (let* ((l  '(("a" . 1) ("b" . 2) ("c" . 3)))
          (h (alist->hamt l string-hash string=?)))
     (test-compare compare-string-alist l (hamt-delete h "d"))))
+
+(define-test-case hamts hamt-collisions ()
+  ;; a bad hash function does not cause problems
+  (let* ((l  '(("a" . 1) ("b" . 2) ("c" . 3)))
+         (h (alist->hamt l bad-hash string=?)))
+    (test-compare compare-string-alist l (hamt->alist h))))
 
 )
