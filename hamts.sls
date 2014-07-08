@@ -10,6 +10,73 @@
 
 ;; You should have received a copy of the BSD license along with this
 ;; program. If not, see <http://www.debian.org/misc/bsd.license>.
+
+;; Documentation:
+;;
+;; Note: For all procedures which take a key as an argument, the key
+;; must be hashable with the hamt hash function, and comparable with
+;; the hamt equivalence predicate.
+;;
+;; make-hamt : (any -> non-negative integer) (any -> any -> boolean) -> hamt
+;; returns a new empty hamt using the given hash and equivalence functions.
+;;
+;; hamt? : any -> boolean
+;; returns #t if argument is a hamt, #f otherwise.
+;;
+;; hamt-size : hamt -> non-negative integer
+;; returns the number of associations in the hamt.
+;;
+;; hamt-ref : hamt any [any] -> any
+;; returns the value associated with the key in the hamt. If there is
+;; no value associated with the key, it returns the default value if
+;; provided, or raises an &assertion-violation if it isn't.
+;;
+;; hamt-contains? : hamt any -> boolean
+;; returns #t if there is an association for the key in the hamt, #f
+;; otherwise.
+;;
+;; hamt-set : hamt any any -> hamt
+;; returns a new hamt with the key associated to the value. If the key
+;; is already associated with a value, it is replaced.
+;;
+;; hamt-update : hamt any (any -> any) any -> hamt
+;; returns a new hamt with the valued associated with the key updated
+;; by the update procedure. If the hamt does not already have a value
+;; associated with the key, then it applies the update procedure to
+;; the default value, and associates the key with that.
+;;
+;; hamt-delete : hamt any -> hamt
+;; returns a hamt with the key and its associated value removed. If
+;; the key is not in the hamt, a copy of the original hamt is
+;; returned.
+;;
+;; hamt-fold : (any any any -> any) any hamt -> hamt
+;; returns the value obtained by iterating the combine procedure over
+;; each key value pair in the hamt. The combine procedure takes three
+;; arguments, the key and value of an association, and an accumulator,
+;; and returns a new accumulator value. The initial value of the
+;; accumulator is provided by the base argument. The order in which
+;; the hamt is traversed is not guaranteed.
+;;
+;; hamt-map : (any -> any) hamt -> hamt
+;; returns the hamt obtained by applying the update procedure to each
+;; of the values in the hamt.
+;;
+;; hamt->alist : hamt -> Listof(Pairs)
+;; returns the key/value associations of the hamt as a list of pairs.
+;; The order of the list is not guaranteed.
+;;
+;; alist->hamt : Listof(Pairs) (any -> non-negative integer) (any -> any -> boolean) -> hamt
+;; returns the hamt containing the associations specified by the pairs
+;; in the alist. If the same key appears in the alist multiple times,
+;; its leftmost value is the one that is used.
+;;
+;; hamt-equivalence-predicate : hamt -> (any -> any -> boolean)
+;; returns the procedure used internally by the hamt to compare keys.
+;;
+;; hamt-hash-function : hamt -> (any -> non-negative integer)
+;; returns the hash procedure used internally by the hamt.
+;;
 (library (pfds hamts)
 (export make-hamt
         hamt?
