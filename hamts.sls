@@ -104,7 +104,7 @@
         (else
          (handle-subtrie node (shift h)))))
 
-(define (insert hvector key value hash eqv?)
+(define (insert hvector key update base hash eqv?)
   (define (handle-subtrie subtrie hash level)
     (define bitmap (subtrie-bitmap subtrie))
     (define vector (subtrie-vector subtrie))
@@ -115,7 +115,7 @@
         (make-subtrie (bitwise-bit-set bitmap index)
                       (vector-insert vector
                                      (ctpop bitmap index)
-                                     (make-leaf key value)))
+                                     (make-leaf key (update base))))
         (let ((node (vector-ref vector (ctpop bitmap index))))
           (cond ((leaf? node)
                  (fixup (handle-leaf node hash level)))
@@ -128,11 +128,11 @@
     (define lkey  (leaf-key node))
     (define lhash (bitwise-arithmetic-shift-right (hash lkey) level))
     (cond ((eqv? key lkey)
-           (make-leaf key value))
+           (make-leaf key (update (leaf-value node))))
           ((equal? khash lhash)
            (make-collision lhash
                            (list (cons lkey (leaf-value node))
-                                 (cons key value))))
+                                 (cons key (update base)))))
           (else
            (handle-subtrie (wrap-subtrie node lhash) (shift khash) (level-up level)))))
 
@@ -140,7 +140,7 @@
     (define chash (bitwise-arithmetic-shift-right (collision-hash node) level))
     (if (equal? hash chash)
         (make-collision (collision-hash node)
-                        (alist-set (collision-alist node) key value eqv?))
+                        (alist-update (collision-alist node) key update base eqv?))
         ;; TODO: there may be a better (more efficient) way to do this
         ;; but simple is better for now (see also handle-leaf)
         (handle-subtrie (wrap-subtrie node chash) (shift hash) (level-up level))))
@@ -154,7 +154,7 @@
   (define initial-level (level-up 0))
 
   (cond ((not node)
-         (vector-set hvector idx (make-leaf key value)))
+         (vector-set hvector idx (make-leaf key (update base))))
         ((leaf? node)
          (vector-set hvector idx (handle-leaf node (shift h) initial-level)))
         ((collision? node)
@@ -312,13 +312,21 @@
   (define root
     (insert (hamt-root hamt)
             key
-            value
+            (lambda (old) value)
+            'dummy
             (hamt-hash-function hamt)
             (hamt-equivalence-predicate hamt)))
   (wrap-root root hamt))
 
 (define (hamt-update hamt key proc default)
-  (not-implemented-yet 'update)) ; TODO:
+  (define root
+    (insert (hamt-root hamt)
+            key
+            proc
+            default
+            (hamt-hash-function hamt)
+            (hamt-equivalence-predicate hamt)))
+  (wrap-root root hamt))
 
 (define (hamt-delete hamt key)
   (define root
@@ -354,8 +362,5 @@
                 (hamt-set hamt (car kv-pair) (cdr kv-pair)))
               (make-hamt hash eqv?)
               alist))
-
-(define (not-implemented-yet who)
- (error 'not-implemented-yet who)) ; TODO: delete
 
 )

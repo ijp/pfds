@@ -84,6 +84,13 @@
       (test-compare compare-string-alist l (hamt-delete h "d"))
       (test-eqv (hamt-size h) (hamt-size (hamt-delete h "d"))))))
 
+(define-test-case hamts hamt-updates ()
+  ;; update non-existent key
+  (test-eqv 1 (hamt-ref (hamt-update (make-string-hamt) "foo" add1 0) "foo" #f))
+  ;; update existing key
+  (let ((h (hamt-set (make-string-hamt) "foo" 12)))
+   (test-eqv 13 (hamt-ref (hamt-update h "foo" add1 0) "foo" #f))))
+
 (define-test-case hamts hamt-collisions ()
   ;; a bad hash function does not cause problems
   (let* ((l  '(("a" . 1) ("b" . 2) ("c" . 3)))
@@ -106,8 +113,16 @@
          (h (alist->hamt al hash =)))
     (test-eqv 94 (hamt-size (foldl (lambda (s h) (hamt-delete h s))
                                    h
-                                   (list 1 93 72 6 24 48))))))
-
+                                   (list 1 93 72 6 24 48)))))
+  ;; collision updates
+  (let* ((l '(("a" . 1) ("b" . 2) ("c" . 3)))
+         (h (alist->hamt l bad-hash string=?)))
+    (test-compare compare-string-alist
+                  '(("a" . 2) ("b" . 3) ("c" . 4))
+                  (foldl (lambda (key hamt)
+                           (hamt-update hamt key add1 0))
+                         h
+                         '("a" "b" "c")))))
 
 (define-test-case hamts hamt-mapping ()
   (let* ((l '(("a" . 97) ("b" . 98) ("c" . 99)))

@@ -3,6 +3,7 @@
 (export alist-ref
         alist-set
         alist-delete
+        alist-update
         )
 (import (rnrs base)
         (only (srfi :1 lists) assoc)
@@ -32,6 +33,15 @@
     (cond ((null? old) new)
           ((eqv? (car (car old)) key)
            (append (cdr old) new))
+          (else (loop (cons (car old) new) (cdr old))))))
+
+(define (alist-update alist key update base eqv?)
+  (let loop ((new '()) (old alist))
+    (cond ((null? old)
+           (cons (cons key (update base)) new))
+          ((eqv? (car (car old)) key)
+           (cons (cons key (update (cdr (car old))))
+                 (append (cdr old) new)))
           (else (loop (cons (car old) new) (cdr old))))))
 
 
