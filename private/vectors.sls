@@ -5,6 +5,7 @@
         vector-remove
         vector-copy
         vector-copy!
+        vector-fold
         )
 (import (rnrs base)
         (rnrs control))
@@ -45,5 +46,14 @@
   (define v* (make-vector len))
   (vector-copy! vector 0 v* 0 len)
   v*)
+
+;; vector-fold is left to right
+(define (vector-fold combine initial vector)
+  (define len (vector-length vector))
+  (let loop ((index 0) (accum initial))
+    (if (>= index len)
+        accum
+        (loop (+ index 1)
+              (combine (vector-ref vector index) accum)))))
 
 )

@@ -114,15 +114,6 @@
 (define (ctpop key index)
   (bitwise-bit-count (bitwise-arithmetic-shift-right key (+ 1 index))))
 
-;; vector-fold is left to right
-(define (vector-fold combine initial vector)
-  (define len (vector-length vector))
-  (let loop ((index 0) (accum initial))
-    (if (>= index len)
-        accum
-        (loop (+ index 1)
-              (combine (vector-ref vector index) accum)))))
-
 ;;; Node types
 
 (define-record-type (subtrie %make-subtrie subtrie?)
