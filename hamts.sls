@@ -102,11 +102,8 @@
 
 (define cardinality 32) ; 64
 
-(define (shift key)
-  (bitwise-arithmetic-shift-right key 5))
-
-(define (mask key)
-  (bitwise-and key (- (expt 2 5) 1)))
+(define (mask key level)
+  (bitwise-arithmetic-shift-right (bitwise-and key (- (expt 2 5) 1)) level))
 
 (define (level-up level)
   (+ level 5))
@@ -139,10 +136,10 @@
 ;;; Main
 
 (define (lookup vector key default hash eqv?)
-  (define (handle-subtrie node hash)
+  (define (handle-subtrie node level)
     (define bitmap (subtrie-bitmap node))
     (define vector (subtrie-vector node))
-    (define index (mask hash))
+    (define index (mask h level))
     (if (not (bitwise-bit-set? bitmap index))
         default
         (let ((node (vector-ref vector (ctpop bitmap index))))
@@ -151,7 +148,7 @@
                 ((collision? node)
                  (handle-collision node))
                 (else
-                 (handle-subtrie node (shift hash)))))))
+                 (handle-subtrie node (level-up level)))))))
 
   (define (handle-leaf node)
     (if (eqv? key (leaf-key node))
@@ -162,19 +159,19 @@
     (alist-ref (collision-alist node) key default eqv?))
   
   (define h (hash key))
-  (define node (vector-ref vector (mask h)))
+  (define node (vector-ref vector (mask h 0)))
 
   (cond ((not node) default)
         ((leaf? node) (handle-leaf node))
         ((collision? node) (handle-collision node))
         (else
-         (handle-subtrie node (shift h)))))
+         (handle-subtrie node (level-up 0)))))
 
 (define (insert hvector key update base hash eqv?)
-  (define (handle-subtrie subtrie hash level)
+  (define (handle-subtrie subtrie level)
     (define bitmap (subtrie-bitmap subtrie))
     (define vector (subtrie-vector subtrie))
-    (define index (mask hash))
+    (define index (mask h level))
     (define (fixup node)
       (make-subtrie bitmap (vector-set vector index node)))
     (if (not (bitwise-bit-set? bitmap index))
@@ -184,14 +181,15 @@
                                      (make-leaf key (update base))))
         (let ((node (vector-ref vector (ctpop bitmap index))))
           (cond ((leaf? node)
-                 (fixup (handle-leaf node hash level)))
+                 (fixup (handle-leaf node level)))
                 ((collision? node)
-                 (fixup (handle-collision node hash level)))
+                 (fixup (handle-collision node level)))
                 (else
-                 (fixup (handle-subtrie node (shift hash) (level-up level))))))))
+                 (fixup (handle-subtrie node (level-up level))))))))
 
-  (define (handle-leaf node khash level)
+  (define (handle-leaf node level)
     (define lkey  (leaf-key node))
+    (define khash (bitwise-arithmetic-shift-right h level))
     (define lhash (bitwise-arithmetic-shift-right (hash lkey) level))
     (cond ((eqv? key lkey)
            (make-leaf key (update (leaf-value node))))
@@ -200,39 +198,40 @@
                            (list (cons lkey (leaf-value node))
                                  (cons key (update base)))))
           (else
-           (handle-subtrie (wrap-subtrie node lhash) (shift khash) (level-up level)))))
+           (handle-subtrie (wrap-subtrie node lhash) (level-up level)))))
 
-  (define (handle-collision node hash level)
+  (define (handle-collision node level)
+    (define khash (bitwise-arithmetic-shift-right h level))
     (define chash (bitwise-arithmetic-shift-right (collision-hash node) level))
-    (if (equal? hash chash)
+    (if (equal? khash chash)
         (make-collision (collision-hash node)
                         (alist-update (collision-alist node) key update base eqv?))
         ;; TODO: there may be a better (more efficient) way to do this
         ;; but simple is better for now (see also handle-leaf)
-        (handle-subtrie (wrap-subtrie node chash) (shift hash) (level-up level))))
+        (handle-subtrie (wrap-subtrie node chash) (level-up level))))
 
   (define (wrap-subtrie node chash)
-    (make-subtrie (bitwise-bit-set 0 (mask chash)) (vector node)))
+    (make-subtrie (bitwise-bit-set 0 (mask chash 0)) (vector node)))
 
   (define h (hash key))
-  (define idx (mask h))
+  (define idx (mask h 0))
   (define node (vector-ref hvector idx))
   (define initial-level (level-up 0))
 
   (cond ((not node)
          (vector-set hvector idx (make-leaf key (update base))))
         ((leaf? node)
-         (vector-set hvector idx (handle-leaf node (shift h) initial-level)))
+         (vector-set hvector idx (handle-leaf node initial-level)))
         ((collision? node)
-         (vector-set hvector idx (handle-collision node (shift h) initial-level)))
+         (vector-set hvector idx (handle-collision node initial-level)))
         (else
-         (vector-set hvector idx (handle-subtrie node (shift h) initial-level)))))
+         (vector-set hvector idx (handle-subtrie node initial-level)))))
 
 (define (delete vector key hash eqv?)
-  (define (handle-subtrie subtrie hash)
+  (define (handle-subtrie subtrie level)
     (define bitmap  (subtrie-bitmap subtrie))
     (define vector  (subtrie-vector subtrie))
-    (define index   (mask hash))
+    (define index   (mask h level))
     (define (fixup node)
       (update bitmap vector index node))
     (if (not (bitwise-bit-set? bitmap index))
@@ -243,7 +242,7 @@
                 ((collision? node)
                  (fixup (handle-collision node)))
                 (else
-                 (fixup (handle-subtrie node (shift hash))))))))
+                 (fixup (handle-subtrie node (level-up level))))))))
 
   (define (update bitmap vector index value)
     (if value
@@ -267,7 +266,7 @@
              (make-collision (collision-hash node) al)))))
   
   (define h (hash key))
-  (define idx (mask h))
+  (define idx (mask h 0))
   (define node (vector-ref vector idx))
 
   (cond ((not node) vector)
@@ -276,7 +275,7 @@
         ((collision? node)
          (vector-set vector idx (handle-collision node)))
         (else
-         (vector-set vector idx (handle-subtrie node (shift h))))))
+         (vector-set vector idx (handle-subtrie node (level-up 0))))))
 
 (define (vec-map mapper vector)
   (define (handle-subtrie trie)
