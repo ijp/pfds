@@ -25,9 +25,6 @@
         hamt-map
         hamt->alist
         alist->hamt
-        ;; make-eqv-hamt
-        ;; make-equal-hamt
-        ;; make-eq-hamt
         )
 (import (rnrs)
         (pfds private vectors)
