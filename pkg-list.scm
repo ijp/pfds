@@ -1,4 +1,4 @@
-(package (pfds (0 2))
+(package (pfds (0 3))
   (depends (wak-trc-testing))
   (synopsis "Purely Functional Data Structures")
   (description
@@ -11,6 +11,7 @@
    "- dlists"
    "- priority search queues"
    "- heaps"
+   "- hamts"
    "- finger trees"
    "- sequences")
   (homepage "http://github.com/ijp/pfds")
@@ -19,4 +20,6 @@
    "LICENSE")
   (libraries
    (sls -> "pfds")
+   ("queues" -> ("pdfs" "queues"))
+   ("deques" -> ("pdfs" "deques"))
    ("private" -> ("pfds" "private"))))
