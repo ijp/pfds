@@ -1,5 +1,5 @@
 #!r6rs
-;; Copyright (C) 2011,2012 Ian Price <ianprice90@googlemail.com>
+;; Copyright (C) 2011-2014 Ian Price <ianprice90@googlemail.com>
 
 ;; Author: Ian Price <ianprice90@googlemail.com>
 
