@@ -23,4 +23,17 @@
         (pfds tests utils)
         (wak trc-testing))
 
+;; Some schemes use lazy loading of modules, and so I can't just use
+;; (run-test pfds) and rely on the side effects in the other modules
+;; to add them to the pfds parent suite.
+(add-test! pfds 'queues queues)
+(add-test! pfds 'deques deques)
+(add-test! pfds 'bbtrees bbtrees)
+(add-test! pfds 'sets sets)
+(add-test! pfds 'psqs psqs)
+(add-test! pfds 'heaps heaps)
+(add-test! pfds 'fingertrees fingertrees)
+(add-test! pfds 'sequences sequences)
+(add-test! pfds 'hamts hamts)
+
 (run-test pfds)

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 function run_guile {
-    guile -x .sls -x .guile.sls -x .ss tests.scm
+    guile -L .. -x .sls -x .guile.sls -x .ss tests.scm
 }
 
 function run_racket {
