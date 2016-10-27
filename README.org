@@ -21,7 +21,7 @@ with more to come, time permitting.
 Just clone it somewhere on your $GUILE_LOAD_PATH and you're
 done. Alternatively, a pkg-list.scm file is provided for use with the
 dorodango package manager.If you want to run the tests file, you will
-need trc-testing from the [[http://gitorious.org/wak][wak project]].
+need trc-testing from the [[https://gitlab.com/wak/wak-trc-testing][wak project]].
 
 ** Documentation
 Documentation is provided at the top of the respective files. The
