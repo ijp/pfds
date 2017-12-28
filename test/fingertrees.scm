@@ -2,6 +2,7 @@
   (export fingertrees)
   (import (rnrs (6))
           (chez-test suite)
+          (chez-test assertions)
           (test utils)
           (rename (pfds fingertrees)
                   (make-fingertree %make-fingertree)
@@ -31,8 +32,8 @@
     "Tests for the fingertree implementation")
   
   (define-test-case fingertrees empty-tree ()
-    (test-predicate fingertree? (make-fingertree))
-    (test-predicate fingertree-empty? (make-fingertree)))
+    (assert-predicate fingertree? (make-fingertree))
+    (assert-predicate fingertree-empty? (make-fingertree)))
   
   (define-test-case fingertrees construction
     (let ((l1 '(a b c d e f))
@@ -49,29 +50,29 @@
                              alist)))
           (empty (make-fingertree)))
       (test-case construction ()
-        (test-eqv #f (fingertree-empty? (fingertree-cons #f empty)))
-        (test-eqv #f (fingertree-empty? (fingertree-snoc empty #f)))
-        (test-equal l1 (fingertree->list (make l2)))
-        (test-equal l1 (fingertree->list (make l3)))
-        (test-equal l1 (fingertree->list (make l4)))
-        (test-equal l1 (fingertree->list (make l5))))))
+        (assert-eqv #f (fingertree-empty? (fingertree-cons #f empty)))
+        (assert-eqv #f (fingertree-empty? (fingertree-snoc empty #f)))
+        (assert-equal l1 (fingertree->list (make l2)))
+        (assert-equal l1 (fingertree->list (make l3)))
+        (assert-equal l1 (fingertree->list (make l4)))
+        (assert-equal l1 (fingertree->list (make l5))))))
   
   (define-test-case fingertrees removal
     (let* ((l1 '(a b c d e f))
            (f1 (list->fingertree l1))
            (f2 (make-fingertree)))
       (test-case removal ()
-        (test-exn fingertree-empty-condition? (fingertree-uncons f2))
-        (test-exn fingertree-empty-condition? (fingertree-unsnoc f2))
+        (assert-raises fingertree-empty-condition? (fingertree-uncons f2))
+        (assert-raises fingertree-empty-condition? (fingertree-unsnoc f2))
         (let-values (((head tail) (fingertree-uncons f1)))
-          (test-eqv (car l1) head)
-          (test-equal (cdr l1) (fingertree->list tail)))
+          (assert-eqv (car l1) head)
+          (assert-equal (cdr l1) (fingertree->list tail)))
         (let*-values (((init last) (fingertree-unsnoc f1))
                       ((l*) (reverse l1))
                       ((l1-last) (car l*))
                       ((l1-init) (reverse (cdr l*))))
-          (test-eqv l1-last last)
-          (test-equal l1-init (fingertree->list init))))))
+          (assert-eqv l1-last last)
+          (assert-equal l1-init (fingertree->list init))))))
   
   (define-test-case fingertrees conversion
     (let ((l1 '(31 238 100 129 6 169 239 150 96 141 207 208 190 45 56
@@ -79,9 +80,9 @@
           (l2 '(25 168 21 246 39 211 60 83 103 161 192 201 31 253
                 156 218 204 186 155 117)))
       (test-case conversion ()
-        (test-equal '() (fingertree->list (list->fingertree '())))
-        (test-equal l1 (fingertree->list (list->fingertree l1)))
-        (test-equal l2 (fingertree->list (list->fingertree l2))))))
+        (assert-equal '() (fingertree->list (list->fingertree '())))
+        (assert-equal l1 (fingertree->list (list->fingertree l1)))
+        (assert-equal l2 (fingertree->list (list->fingertree l2))))))
   
   (define-test-case fingertrees ftree-append
     (let ((l1 '(31 238 100 129 6 169 239 150 96 141 207 208 190 45 56
@@ -94,11 +95,11 @@
                        (list->fingertree a)
                        (list->fingertree b))))))
       (test-case ftree-append ()
-        (test-equal (append l1 '()) (append* l1 '()))
-        (test-equal (append '() l1) (append* '() l1))
-        (test-equal (append l1 l2) (append* l1 l2))
-        (test-equal (append l1 l1) (append* l1 l1))
-        (test-equal (append l1 l2) (append* l1 l2)))))
+        (assert-equal (append l1 '()) (append* l1 '()))
+        (assert-equal (append '() l1) (append* '() l1))
+        (assert-equal (append l1 l2) (append* l1 l2))
+        (assert-equal (append l1 l1) (append* l1 l1))
+        (assert-equal (append l1 l2) (append* l1 l2)))))
   
   (define-test-case fingertrees monoidal-operation
     (let ((l1 '(31 238 100 129 6 169 239 150 96 141
@@ -108,22 +109,22 @@
           (car/default (lambda (dflt) (lambda (x) (if (pair? x) (car x) dflt))))
           (list->sum-tree (lambda (l1) (%list->fingertree l1 0 + values))))
       (test-case moniodal-operation ()
-        (test-equal 254 (fingertree-measure (%list->fingertree l1 0 max values)))
-        (test-equal 6 (fingertree-measure (%list->fingertree l1 1000 min values)))
-        (test-equal l1 (fingertree-measure (%list->fingertree l2 '() append values)))
-        (test-equal 595 (fingertree-measure
+        (assert-equal 254 (fingertree-measure (%list->fingertree l1 0 max values)))
+        (assert-equal 6 (fingertree-measure (%list->fingertree l1 1000 min values)))
+        (assert-equal l1 (fingertree-measure (%list->fingertree l2 '() append values)))
+        (assert-equal 595 (fingertree-measure
                          (%list->fingertree l2 0 + (car/default 0))))
         ;; sum of l1 is 4239
-        (test-equal l1 (let-values (((a b) (fingertree-split (lambda (x) (> x 0))
+        (assert-equal l1 (let-values (((a b) (fingertree-split (lambda (x) (> x 0))
                                                              (list->sum-tree l1))))
                          (fingertree->list (fingertree-append a b))))
-        (test-equal l1 (let-values (((a b) (fingertree-split (lambda (x) (> x 1000))
+        (assert-equal l1 (let-values (((a b) (fingertree-split (lambda (x) (> x 1000))
                                                              (list->sum-tree l1))))
                          (fingertree->list (fingertree-append a b))))
-        (test-equal l1 (let-values (((a b) (fingertree-split (lambda (x) (> x 2000))
+        (assert-equal l1 (let-values (((a b) (fingertree-split (lambda (x) (> x 2000))
                                                              (list->sum-tree l1))))
                          (fingertree->list (fingertree-append a b))))
-        (test-equal l1 (let-values (((a b) (fingertree-split (lambda (x) (> x 5000))
+        (assert-equal l1 (let-values (((a b) (fingertree-split (lambda (x) (> x 5000))
                                                              (list->sum-tree l1))))
                          (fingertree->list (fingertree-append a b)))))))
   
@@ -135,14 +136,14 @@
            (ft (list->fingertree l)))
       (test-case fingertree-folds ()
         ;; empty case
-        (test-eqv #t (fingertree-fold (lambda _ #f) #t (make-fingertree)))
-        (test-eqv #t (fingertree-fold-right (lambda _ #f) #t (make-fingertree)))
+        (assert-eqv #t (fingertree-fold (lambda _ #f) #t (make-fingertree)))
+        (assert-eqv #t (fingertree-fold-right (lambda _ #f) #t (make-fingertree)))
         ;; associative operations
-        (test-eqv total (fingertree-fold + 0 ft))
-        (test-eqv total (fingertree-fold-right + 0 ft))
+        (assert-eqv total (fingertree-fold + 0 ft))
+        (assert-eqv total (fingertree-fold-right + 0 ft))
         ;; non-associative operations
-        (test-equal lrev (fingertree-fold cons '() ft))
-        (test-equal l (fingertree-fold-right cons '() ft)))))
+        (assert-equal lrev (fingertree-fold cons '() ft))
+        (assert-equal l (fingertree-fold-right cons '() ft)))))
   
   (define-test-case fingertrees reversal
     (let ((rev (lambda (l)
@@ -157,23 +158,23 @@
                 192 201 31 253 156 218 204 186 155 117)))
       (test-case reversal ()
         ;; behaves the same as regular reverse on lists
-        (test-eqv '() (rev '()))
-        (test-equal '(1) (rev '(1)))
-        (test-equal '(6 5 4 3 2 1) (rev '(1 2 3 4 5 6)))
-        (test-equal (reverse l1) (rev l1))
-        (test-equal (reverse l2) (rev l2))
+        (assert-eqv '() (rev '()))
+        (assert-equal '(1) (rev '(1)))
+        (assert-equal '(6 5 4 3 2 1) (rev '(1 2 3 4 5 6)))
+        (assert-equal (reverse l1) (rev l1))
+        (assert-equal (reverse l2) (rev l2))
         ;; double reversal is the the same list
-        (test-equal l1 (id l1))
-        (test-equal l2 (id l2))
+        (assert-equal l1 (id l1))
+        (assert-equal l2 (id l2))
         ;; a fingertree will have the same measure as its reverse if
         ;; the monoid is commutative
-        (test-equal (fingertree-measure (list->product-tree l1))
+        (assert-equal (fingertree-measure (list->product-tree l1))
                     (fingertree-measure
                      (fingertree-reverse (list->product-tree l1))))
         ;; otherwise they are not necessarily the same
         ;; in this case, they are the same only if the first and last
         ;; elements are the same
-        (test-not
+        (assert-not
          (equal? (fingertree-measure (list->last-tree l2))
                  (fingertree-measure (fingertree-reverse (list->product-tree l2))))))))
   

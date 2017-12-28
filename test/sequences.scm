@@ -2,6 +2,7 @@
   (export sequences)
   (import (rnrs (6))
           (chez-test suite)
+          (chez-test assertions)
           (test utils)
           (pfds sequences))
   
@@ -14,9 +15,9 @@
   (define-test-case sequences sequences-bugs
     (let ((s (sequence 'zero 'one 'two)))
       (test-case sequences-bugs ()
-        (test-eqv 'zero (sequence-ref s 0))
-        (test-eqv 'two (sequence-ref s 2))
-        (test-exn assertion-violation? (sequence-ref s -1))
-        (test-exn assertion-violation? (sequence-ref s 3)))))
+        (assert-eqv 'zero (sequence-ref s 0))
+        (assert-eqv 'two (sequence-ref s 2))
+        (assert-raises assertion-violation? (sequence-ref s -1))
+        (assert-raises assertion-violation? (sequence-ref s 3)))))
   
 )

@@ -2,6 +2,7 @@
   (export queues)
   (import (rnrs (6))
           (chez-test suite)
+          (chez-test assertions)
           (test utils)
           (pfds queues))
   
@@ -9,17 +10,17 @@
     "Tests for the functional queue implementation")
   
   (define-test-case queues empty-queue ()
-    (test-predicate queue? (make-queue))
-    (test-predicate queue-empty? (make-queue))
-    (test-eqv 0 (queue-length (make-queue))))
+    (assert-predicate queue? (make-queue))
+    (assert-predicate queue-empty? (make-queue))
+    (assert-eqv 0 (queue-length (make-queue))))
   
   (define-test-case queues enqueue
     (let ((queue (enqueue (make-queue) 'foo)))
       (test-case enqueue ()
-        (test-predicate queue? queue)
-        (test-eqv #t (not (queue-empty? queue)))
-        (test-eqv 1 (queue-length queue))
-        (test-eqv 10 (queue-length
+        (assert-predicate queue? queue)
+        (assert-eqv #t (not (queue-empty? queue)))
+        (assert-eqv 1 (queue-length queue))
+        (assert-eqv 10 (queue-length
                       (fold-left (lambda (queue val)
                                (enqueue queue val))
                              (make-queue)
@@ -30,16 +31,16 @@
           (queue1 (enqueue (make-queue) 'foo))
           (queue2 (enqueue (enqueue (make-queue) 'foo) 'bar)))
       (let-values (((item queue) (dequeue queue1)))
-        (test-eqv 'foo item)
-        (test-predicate queue? queue)
-        (test-predicate queue-empty? queue))
+        (assert-eqv 'foo item)
+        (assert-predicate queue? queue)
+        (assert-predicate queue-empty? queue))
       (let*-values (((first queue*) (dequeue queue2))
                     ((second queue) (dequeue queue*)))
-                   (test-eqv 'foo first)
-                   (test-eqv 'bar second)
-                   (test-eqv 1 (queue-length queue*))
-                   (test-eqv 0 (queue-length queue)))
-      (test-eqv #t
+                   (assert-eqv 'foo first)
+                   (assert-eqv 'bar second)
+                   (assert-eqv 1 (queue-length queue*))
+                   (assert-eqv 0 (queue-length queue)))
+      (assert-eqv #t
                 (guard (exn ((queue-empty-condition? exn) #t)
                             (else #f))
                   (dequeue empty)
@@ -49,7 +50,7 @@
   (define-test-case queues queue-ordering ()
     (let* ((list '(bar quux foo zot baz))
            (queue (list->queue list)))
-      (test-eqv 5 (queue-length queue))
-      (test-equal list (queue->list queue))))
+      (assert-eqv 5 (queue-length queue))
+      (assert-equal list (queue->list queue))))
   
 )
