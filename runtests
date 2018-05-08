@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 function run_guile {
     guile -L .. -x .sls -x .guile.sls -x .ss tests.scm
@@ -8,9 +8,14 @@ function run_racket {
     racket tests.scm
 }
 
+function run_chez {
+    scheme --libdirs ..:${CHEZSCHEMELIBDIRS} --script tests.scm
+}
+
 case "$1" in
     guile) run_guile ;;
     racket) run_racket ;;
-    all) run_guile; run_racket ;;
+    chez) run_chez ;;
+    all) run_guile; run_racket; run_chez ;;
     *) run_guile ;;
 esac

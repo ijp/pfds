@@ -107,6 +107,7 @@
         psq-contains?
         ;; priority queue operations
         psq-min
+        psq-min-priority
         psq-delete-min
         psq-pop
         ;; ranged query operations
@@ -301,6 +302,12 @@
     (assertion-violation 'psq-min
                          "Can't take the minimum of an empty priority search queue"))
   (winner-key tree))
+
+(define (min-priority tree)
+  (when (void? tree)
+    (assertion-violation 'psq-min-priority
+                         "Can't take the minimum of an empty priority search queue"))
+  (winner-priority tree))
 
 (define (pop tree key<? prio<?)
   (when (void? tree)
@@ -509,6 +516,10 @@
 (define (psq-min psq)
   (assert (psq? psq))
   (min (psq-tree psq)))
+
+(define (psq-min-priority psq)
+  (assert (psq? psq))
+  (min-priority (psq-tree psq)))
 
 (define (psq-delete-min psq)
   (assert (and (psq? psq)
