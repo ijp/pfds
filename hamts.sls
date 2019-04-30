@@ -307,7 +307,7 @@
 
 (define (fold combine initial vector)
   (define (handle-subtrie trie accum)
-    (vector-fold dispatch accum (subtrie-vector vector)))
+    (vector-fold dispatch accum (subtrie-vector trie)))
 
   (define (handle-leaf leaf accum)
     (combine (leaf-key leaf) (leaf-value leaf) accum))
