@@ -157,7 +157,7 @@
 
   (define (handle-collision node)
     (alist-ref (collision-alist node) key default eqv?))
-  
+
   (define h (hash key))
   (define node (vector-ref vector (mask h 0)))
 
@@ -264,7 +264,7 @@
              (make-leaf (car (car al)) (cdr (car al))))
             (else
              (make-collision (collision-hash node) al)))))
-  
+
   (define h (hash key))
   (define idx (mask h 0))
   (define node (vector-ref vector idx))
@@ -280,7 +280,7 @@
 (define (vec-map mapper vector)
   (define (handle-subtrie trie)
     (make-subtrie (subtrie-bitmap trie)
-                  (vector-map dispatch (subtrie-vector vector))))
+                  (vector-map dispatch (subtrie-vector trie))))
 
   (define (handle-leaf leaf)
     (make-leaf (leaf-key leaf)
